@@ -131,10 +131,63 @@
 
     <!-- 根据描述关键词查询 -->
     <select id="selectByDescriptionKeyword" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM api_test
+        SELECT * FROM api_test 
         WHERE description LIKE CONCAT('%', #{keyword}, '%')
         ORDER BY created_time DESC
+    </select>
+
+    <!-- 分页查询API测试（支持筛选和排序） -->
+    <select id="selectByPage" resultMap="BaseResultMap">
+        SELECT * FROM api_test
+        <where>
+            <if test="params.search != null and params.search != ''">
+                AND (name LIKE CONCAT('%', #{params.search}, '%') 
+                OR description LIKE CONCAT('%', #{params.search}, '%'))
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND status = #{params.status}
+            </if>
+        </where>
+        <choose>
+            <when test="params.sortBy == 'name'">
+                ORDER BY name 
+                <if test="params.sortOrder == 'desc'">DESC</if>
+                <if test="params.sortOrder == 'asc'">ASC</if>
+            </when>
+            <when test="params.sortBy == 'status'">
+                ORDER BY status 
+                <if test="params.sortOrder == 'desc'">DESC</if>
+                <if test="params.sortOrder == 'asc'">ASC</if>
+            </when>
+            <when test="params.sortBy == 'lastRunTime'">
+                ORDER BY last_run_time 
+                <if test="params.sortOrder == 'desc'">DESC</if>
+                <if test="params.sortOrder == 'asc'">ASC</if>
+            </when>
+            <when test="params.sortBy == 'executionTime'">
+                ORDER BY execution_time 
+                <if test="params.sortOrder == 'desc'">DESC</if>
+                <if test="params.sortOrder == 'asc'">ASC</if>
+            </when>
+            <otherwise>
+                ORDER BY created_time DESC
+            </otherwise>
+        </choose>
+        LIMIT #{params.size} OFFSET #{params.offset}
+    </select>
+
+    <!-- 分页查询总数（支持筛选） -->
+    <select id="selectCountByPage" resultType="int">
+        SELECT COUNT(*) FROM api_test
+        <where>
+            <if test="params.search != null and params.search != ''">
+                AND (name LIKE CONCAT('%', #{params.search}, '%') 
+                OR description LIKE CONCAT('%', #{params.search}, '%'))
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND status = #{params.status}
+            </if>
+        </where>
     </select>
 
 </mapper>

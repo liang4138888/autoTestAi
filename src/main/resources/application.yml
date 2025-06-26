@@ -40,14 +40,24 @@ mybatis-plus:
 # 日志配置
 logging:
   level:
-    com.api.automation: INFO
+    com.api.automation: DEBUG
     com.api.automation.mapper: DEBUG
+    com.api.automation.service: DEBUG
+    com.api.automation.controller: DEBUG
     org.springframework.web: INFO
     org.apache.ibatis: DEBUG
     com.zaxxer.hikari: INFO
     org.springframework.jdbc.core: DEBUG
+    # 增加根日志级别，确保所有异常都能被记录
+    root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  # 添加文件日志输出
+  file:
+    name: logs/auto-test-ai.log
+    max-size: 10MB
+    max-history: 30
   mybatis:
     sql:
       color: true

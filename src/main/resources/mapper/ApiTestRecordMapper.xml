@@ -5,20 +5,22 @@
     <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="com.api.automation.model.ApiTestRecord">
         <id column="id" property="id" jdbcType="VARCHAR"/>
-        <result column="test_id" property="testId" jdbcType="VARCHAR"/>
-        <result column="test_name" property="testName" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="VARCHAR"/>
-        <result column="result" property="result" jdbcType="LONGVARCHAR"/>
+        <result column="curl_command" property="curlCommand" jdbcType="LONGVARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
         <result column="error_message" property="errorMessage" jdbcType="LONGVARCHAR"/>
         <result column="execution_time" property="executionTime" jdbcType="BIGINT"/>
+        <result column="name" property="testName" jdbcType="VARCHAR"/>
         <result column="response_code" property="responseCode" jdbcType="INTEGER"/>
+        <result column="result" property="result" jdbcType="LONGVARCHAR"/>
+        <result column="test_id" property="testId" jdbcType="VARCHAR"/>
         <result column="run_time" property="runTime" jdbcType="TIMESTAMP"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="created_time" property="createdTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <!-- 基础字段 -->
     <sql id="Base_Column_List">
-        id, test_id, test_name, status, result, error_message,
+        id, curl_command, test_id, description, test_name, status, result, error_message,
         execution_time, response_code, run_time, created_time
     </sql>
 

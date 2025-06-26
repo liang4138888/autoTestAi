@@ -70,4 +70,14 @@ public interface ApiTestMapper extends BaseMapper<ApiTest> {
      * 根据描述关键词查询
      */
     List<ApiTest> selectByDescriptionKeyword(@Param("keyword") String keyword);
+
+    /**
+     * 分页查询API测试（支持筛选和排序）
+     */
+    List<ApiTest> selectByPage(@Param("params") Map<String, Object> params);
+
+    /**
+     * 分页查询总数（支持筛选）
+     */
+    int selectCountByPage(@Param("params") Map<String, Object> params);
 }

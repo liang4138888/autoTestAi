@@ -15,7 +15,7 @@ public class ApiTest {
     private String id;
 
     private String name;
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String curlCommand;
     @Column(length = 1000)
     private String description;

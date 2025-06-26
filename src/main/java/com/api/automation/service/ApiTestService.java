@@ -61,4 +61,9 @@ public interface ApiTestService {
      * 初始化示例数据
      */
     void initializeSampleData();
+
+    /**
+     * 分页查询API测试（支持筛选和排序）
+     */
+    Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String sortBy, String sortOrder);
 } 

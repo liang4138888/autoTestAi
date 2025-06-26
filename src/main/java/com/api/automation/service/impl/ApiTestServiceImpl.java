@@ -146,34 +146,60 @@ public class ApiTestServiceImpl implements ApiTestService {
      */
     @Override
     public void initializeSampleData() {
-        // 使用MyBatis Plus的count方法
-        Long count = apiTestMapper.selectCount(null);
-        if (count == 0) {
-            addApiTest(new ApiTest(
-                "健康检查接口",
-                "curl -X GET http://localhost:8080/api/tests/statistics",
-                "测试系统健康检查接口，验证API服务是否正常运行"
-            ));
-            addApiTest(new ApiTest(
-                "创建API测试",
-                "curl -X POST http://localhost:8080/api/tests -H 'Content-Type: application/json' -d '{\"name\":\"测试接口\",\"curlCommand\":\"curl -X GET http://example.com\",\"description\":\"测试描述\"}'",
-                "测试创建新的API测试用例功能"
-            ));
-            addApiTest(new ApiTest(
-                "模拟认证接口",
-                "curl -X GET http://localhost:8080/api/tests -H 'Authorization: Bearer test-token'",
-                "测试需要认证的API接口，验证认证头处理"
-            ));
-            addApiTest(new ApiTest(
-                "公共API测试",
-                "curl -X GET https://httpbin.org/json",
-                "测试外部公共API接口，验证网络连接和JSON响应"
-            ));
-            addApiTest(new ApiTest(
-                "404错误测试",
-                "curl -X GET http://localhost:8080/api/nonexistent",
-                "测试404错误处理，验证错误响应格式"
-            ));
+        // 检查是否已有数据
+        if (apiTestMapper.selectCount(null) > 0) {
+            return;
         }
+        
+        // 创建示例数据
+        List<ApiTest> sampleTests = Arrays.asList(
+            new ApiTest("用户登录API", "curl -X POST http://localhost:8080/api/login -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"123456\"}'", "测试用户登录功能"),
+            new ApiTest("获取用户信息", "curl -X GET http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试获取用户信息功能"),
+            new ApiTest("创建用户", "curl -X POST http://localhost:8080/api/user -H 'Content-Type: application/json' -d '{\"name\":\"张三\",\"email\":\"zhangsan@example.com\"}'", "测试创建用户功能"),
+            new ApiTest("更新用户", "curl -X PUT http://localhost:8080/api/user/1 -H 'Content-Type: application/json' -d '{\"name\":\"李四\",\"email\":\"lisi@example.com\"}'", "测试更新用户功能"),
+            new ApiTest("删除用户", "curl -X DELETE http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试删除用户功能")
+        );
+        
+        sampleTests.forEach(test -> {
+            test.setStatus("NOT_EXECUTED");
+            apiTestMapper.insert(test);
+        });
+    }
+
+    /**
+     * 分页查询API测试（支持筛选和排序）
+     */
+    @Override
+    public Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String sortBy, String sortOrder) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 计算偏移量
+        int offset = (page - 1) * size;
+        
+        // 构建查询条件
+        Map<String, Object> params = new HashMap<>();
+        params.put("offset", offset);
+        params.put("size", size);
+        params.put("search", search);
+        params.put("status", status);
+        params.put("sortBy", sortBy);
+        params.put("sortOrder", sortOrder);
+        
+        // 查询数据
+        List<ApiTest> tests = apiTestMapper.selectByPage(params);
+        int total = apiTestMapper.selectCountByPage(params);
+        
+        // 计算总页数
+        int totalPages = (int) Math.ceil((double) total / size);
+        
+        result.put("content", tests);
+        result.put("totalElements", total);
+        result.put("totalPages", totalPages);
+        result.put("currentPage", page);
+        result.put("pageSize", size);
+        result.put("hasNext", page < totalPages);
+        result.put("hasPrevious", page > 1);
+        
+        return result;
     }
 } 
