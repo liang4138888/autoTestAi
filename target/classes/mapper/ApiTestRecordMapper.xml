@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.api.automation.mapper.ApiTestRecordMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.api.automation.model.ApiTestRecord">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="test_id" property="testId" jdbcType="VARCHAR"/>
+        <result column="test_name" property="testName" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="result" property="result" jdbcType="LONGVARCHAR"/>
+        <result column="error_message" property="errorMessage" jdbcType="LONGVARCHAR"/>
+        <result column="execution_time" property="executionTime" jdbcType="BIGINT"/>
+        <result column="response_code" property="responseCode" jdbcType="INTEGER"/>
+        <result column="run_time" property="runTime" jdbcType="TIMESTAMP"/>
+        <result column="created_time" property="createdTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, test_id, test_name, status, result, error_message,
+        execution_time, response_code, run_time, created_time
+    </sql>
+
+    <!-- 根据测试ID查询执行记录，按执行时间倒序 -->
+    <select id="selectByTestIdOrderByRunTimeDesc" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE test_id = #{testId}
+        ORDER BY run_time DESC
+    </select>
+
+    <!-- 查询指定测试的最近N次执行记录 -->
+    <select id="selectRecentRecordsByTestId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE test_id = #{testId}
+        ORDER BY run_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询指定时间范围内的执行记录 -->
+    <select id="selectByTimeRange" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE run_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY run_time DESC
+    </select>
+
+    <!-- 统计指定测试的成功率 -->
+    <select id="calculateSuccessRate" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as total_count,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as success_count,
+            CASE
+                WHEN COUNT(*) = 0 THEN 0
+                ELSE (SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(*))
+            END as success_rate
+        FROM api_test_record
+        WHERE test_id = #{testId}
+    </select>
+
+    <!-- 查询执行失败的记录 -->
+    <select id="selectFailedRecords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE test_id = #{testId} AND status = 'FAILED'
+        ORDER BY run_time DESC
+    </select>
+
+    <!-- 查询执行时间超过阈值的记录 -->
+    <select id="selectSlowExecutionRecords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE execution_time > #{threshold}
+        ORDER BY execution_time DESC
+    </select>
+
+    <!-- 统计每日执行次数 -->
+    <select id="countDailyExecutions" resultType="java.util.Map">
+        SELECT
+            DATE(run_time) as execution_date,
+            COUNT(*) as execution_count,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as success_count,
+            SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed_count
+        FROM api_test_record
+        WHERE run_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY DATE(run_time)
+        ORDER BY execution_date DESC
+    </select>
+
+    <!-- 查询平均执行时间 -->
+    <select id="calculateAverageExecutionTime" resultType="java.util.Map">
+        SELECT
+            AVG(execution_time) as avg_execution_time,
+            MIN(execution_time) as min_execution_time,
+            MAX(execution_time) as max_execution_time,
+            COUNT(*) as total_executions
+        FROM api_test_record
+        WHERE test_id = #{testId}
+    </select>
+
+    <!-- 删除指定测试的历史记录 -->
+    <delete id="deleteByTestId">
+        DELETE FROM api_test_record
+        WHERE test_id = #{testId}
+    </delete>
+
+    <!-- 查询指定状态的所有记录 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        WHERE status = #{status}
+        ORDER BY run_time DESC
+    </select>
+
+    <!-- 统计各测试的执行次数 -->
+    <select id="countExecutionsByTest" resultType="java.util.Map">
+        SELECT
+            test_id,
+            test_name,
+            COUNT(*) as execution_count,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as success_count,
+            SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed_count,
+            AVG(execution_time) as avg_execution_time
+        FROM api_test_record
+        GROUP BY test_id, test_name
+        ORDER BY execution_count DESC
+    </select>
+
+    <!-- 查询最近的执行记录（所有测试） -->
+    <select id="selectRecentRecords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test_record
+        ORDER BY run_time DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoTestAI - API自动化测试平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .status-success { color: #28a745; }
+        .status-failed { color: #dc3545; }
+        .status-running { color: #ffc107; }
+        
+        .card-header { 
+            background-color: #f8f9fa; 
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .test-item { 
+            border-left: 4px solid #dee2e6; 
+            transition: all 0.3s ease;
+            background-color: white;
+            height: 100%;
+        }
+        
+        .test-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .test-item.success { border-left-color: #28a745; }
+        .test-item.failed { border-left-color: #dc3545; }
+        .test-item.running { border-left-color: #ffc107; }
+        
+        .test-item .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .test-item .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .test-item .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+        }
+        
+        .test-item .card-body {
+            padding: 1rem;
+        }
+        
+        .execution-time { 
+            font-size: 0.8em; 
+            color: #6c757d; 
+        }
+        
+        .stats-card { 
+            transition: all 0.3s ease; 
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-group .btn {
+            margin-left: 2px;
+        }
+        
+        .test-description {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .test-meta {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .test-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .test-actions {
+                margin-top: 10px;
+            }
+            
+            .btn-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn-group .btn {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- 头部 - 居中显示 -->
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-robot"></i> AutoTestAI
+                </h1>
+                <p class="mb-0 opacity-75">AI驱动的API自动化测试平台</p>
+            </div>
+        </div>
+
+        <!-- 统计卡片 - 等比例分配 -->
+        <div class="row mb-4">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-list-check text-primary fs-1"></i>
+                        <h5 class="card-title mt-2">总测试数</h5>
+                        <h3 class="text-primary" id="totalTests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-play-circle text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">运行中</h5>
+                        <h3 class="text-warning" id="runningTests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <h5 class="card-title mt-2">成功</h5>
+                        <h3 class="text-success" id="successTests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-x-circle text-danger fs-1"></i>
+                        <h5 class="card-title mt-2">失败</h5>
+                        <h3 class="text-danger" id="failedTests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-clock text-secondary fs-1"></i>
+                        <h5 class="card-title mt-2">未执行</h5>
+                        <h3 class="text-secondary" id="notExecutedTests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-graph-up text-info fs-1"></i>
+                        <h5 class="card-title mt-2">成功率</h5>
+                        <h3 class="text-info" id="successRate">0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success" onclick="executeAll()">
+                        <i class="bi bi-play-circle"></i> 执行所有测试
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddModal()">
+                        <i class="bi bi-plus-circle"></i> 添加测试
+                    </button>
+                    <button class="btn btn-info" onclick="initSampleData()">
+                        <i class="bi bi-database"></i> 初始化示例数据
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise"></i> 刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试列表 - 横向排列等比例分配 -->
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul"></i> API测试列表
+                        </h5>
+                        <div>
+                            <span class="badge bg-success fs-6" id="successRate">0%</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="testList" class="row">
+                            <!-- 测试项目将在这里动态生成，使用等比例分配 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast容器 -->
+    <div class="toast-container"></div>
+
+    <!-- 添加测试模态框 -->
+    <div class="modal fade" id="addTestModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> 添加API测试
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTestForm">
+                        <div class="mb-3">
+                            <label class="form-label">测试名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="testName" required 
+                                   placeholder="请输入测试名称">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Curl命令 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="curlCommand" rows="4" required 
+                                placeholder="curl -X GET http://example.com/api/test"></textarea>
+                            <div class="form-text">请输入完整的curl命令</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" id="testDescription" rows="2"
+                                      placeholder="请输入测试描述（可选）"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="addTest()">
+                        <i class="bi bi-plus"></i> 添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试详情模态框 -->
+    <div class="modal fade" id="testDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailTitle">
+                        <i class="bi bi-info-circle"></i> 测试详情
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-card-text"></i> 基本信息</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>名称:</strong></td><td id="detailName"></td></tr>
+                                <tr><td><strong>状态:</strong></td><td id="detailStatus"></td></tr>
+                                <tr><td><strong>执行时间:</strong></td><td id="detailExecutionTime"></td></tr>
+                                <tr><td><strong>最后执行:</strong></td><td id="detailLastRun"></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-terminal"></i> Curl命令</h6>
+                            <pre id="detailCurl" class="bg-light p-3 rounded border"></pre>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6><i class="bi bi-arrow-return-right"></i> 响应结果</h6>
+                            <pre id="detailResult" class="bg-light p-3 rounded border" style="max-height: 300px; overflow-y: auto;"></pre>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="errorSection" style="display: none;">
+                        <div class="col-12">
+                            <h6 class="text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> 错误信息
+                            </h6>
+                            <pre id="detailError" class="bg-danger text-white p-3 rounded"></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" onclick="executeSingleTest()">
+                        <i class="bi bi-play"></i> 执行测试
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html> 

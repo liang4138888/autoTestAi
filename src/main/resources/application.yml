@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-automation-dashboard
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ioe?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: QWERasdf1234..
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+# MyBatis Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.api.automation.model
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+    log-impl: com.api.automation.config.SqlLogConfig$CustomSqlLogger
+    call-setters-on-nulls: true
+    default-executor-type: SIMPLE
+  global-config:
+    db-config:
+      id-type: assign_uuid
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 日志配置
+logging:
+  level:
+    com.api.automation: INFO
+    com.api.automation.mapper: DEBUG
+    org.springframework.web: INFO
+    org.apache.ibatis: DEBUG
+    com.zaxxer.hikari: INFO
+    org.springframework.jdbc.core: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  mybatis:
+    sql:
+      color: true
+      show-time: true
+      show-params: true
+
+# 自定义配置
+api:
+  automation:
+    # 默认超时时间（毫秒）
+    timeout: 30000
+    # 并发执行数
+    max-concurrent: 10 

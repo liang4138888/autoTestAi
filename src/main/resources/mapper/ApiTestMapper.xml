@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.api.automation.mapper.ApiTestMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.api.automation.model.ApiTest">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="curl_command" property="curlCommand" jdbcType="LONGVARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="result" property="result" jdbcType="LONGVARCHAR"/>
+        <result column="error_message" property="errorMessage" jdbcType="LONGVARCHAR"/>
+        <result column="execution_time" property="executionTime" jdbcType="BIGINT"/>
+        <result column="response_code" property="responseCode" jdbcType="INTEGER"/>
+        <result column="last_run_time" property="lastRunTime" jdbcType="TIMESTAMP"/>
+        <result column="enabled" property="enabled" jdbcType="BOOLEAN"/>
+        <result column="created_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updated_time" property="lastRunTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, name, curl_command, description, status, result, error_message,
+        execution_time, response_code, last_run_time, enabled, created_time, updated_time
+    </sql>
+
+    <!-- 根据状态查询API测试列表 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE status = #{status}
+        ORDER BY last_run_time DESC
+    </select>
+
+    <!-- 根据名称模糊查询 -->
+    <select id="selectByNameLike" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 查询最近执行的API测试 -->
+    <select id="selectRecentlyExecuted" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE last_run_time IS NOT NULL
+        ORDER BY last_run_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询执行时间超过指定阈值的API测试 -->
+    <select id="selectByExecutionTimeThreshold" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE execution_time > #{threshold}
+        ORDER BY execution_time DESC
+    </select>
+
+    <!-- 统计各状态的API测试数量 -->
+    <select id="countByStatus" resultType="java.util.Map">
+        SELECT
+            status,
+            COUNT(*) as count
+        FROM api_test
+        GROUP BY status
+    </select>
+
+    <!-- 查询指定时间范围内执行的API测试 -->
+    <select id="selectByTimeRange" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE last_run_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY last_run_time DESC
+    </select>
+
+    <!-- 查询成功率低于指定值的API测试 -->
+    <select id="selectByLowSuccessRate" resultMap="BaseResultMap">
+        SELECT
+            t1.*
+        FROM api_test t1
+        LEFT JOIN (
+            SELECT
+                test_id,
+                COUNT(*) as total_count,
+                SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as success_count
+            FROM api_test_record
+            GROUP BY test_id
+        ) t2 ON t1.id = t2.test_id
+        WHERE t2.total_count IS NULL
+           OR t2.total_count = 0
+           OR (t2.success_count * 100.0 / t2.total_count) &lt; #{successRate}
+        ORDER BY t1.created_time DESC
+    </select>
+
+    <!-- 批量更新API测试状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE api_test
+        SET status = #{status}, updated_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 查询执行次数最多的API测试 -->
+    <select id="selectMostExecuted" resultMap="BaseResultMap">
+        SELECT
+            t1.*,
+            COUNT(t2.id) as execution_count
+        FROM api_test t1
+        LEFT JOIN api_test_record t2 ON t1.id = t2.test_id
+        GROUP BY t1.id
+        ORDER BY execution_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询平均执行时间最长的API测试 -->
+    <select id="selectSlowestApiTests" resultMap="BaseResultMap">
+        SELECT
+            t1.*,
+            AVG(t2.execution_time) as avg_execution_time
+        FROM api_test t1
+        LEFT JOIN api_test_record t2 ON t1.id = t2.test_id
+        WHERE t2.execution_time IS NOT NULL
+        GROUP BY t1.id
+        ORDER BY avg_execution_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 根据描述关键词查询 -->
+    <select id="selectByDescriptionKeyword" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM api_test
+        WHERE description LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY created_time DESC
+    </select>
+
+</mapper>
