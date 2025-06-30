@@ -4,25 +4,25 @@
 
     <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="com.api.automation.model.ApiTest">
-        <id column="id" property="id" jdbcType="VARCHAR"/>
-        <result column="name" property="name" jdbcType="VARCHAR"/>
-        <result column="curl_command" property="curlCommand" jdbcType="LONGVARCHAR"/>
-        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
-        <result column="status" property="status" jdbcType="VARCHAR"/>
-        <result column="result" property="result" jdbcType="LONGVARCHAR"/>
-        <result column="error_message" property="errorMessage" jdbcType="LONGVARCHAR"/>
-        <result column="execution_time" property="executionTime" jdbcType="BIGINT"/>
-        <result column="response_code" property="responseCode" jdbcType="INTEGER"/>
-        <result column="last_run_time" property="lastRunTime" jdbcType="TIMESTAMP"/>
-        <result column="enabled" property="enabled" jdbcType="BOOLEAN"/>
-        <result column="created_time" property="createTime" jdbcType="TIMESTAMP"/>
-        <result column="updated_time" property="lastRunTime" jdbcType="TIMESTAMP"/>
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="description" property="description" jdbcType="VARCHAR" />
+        <result column="enabled" property="enabled" jdbcType="BIT" />
+        <result column="error_message" property="errorMessage" jdbcType="VARCHAR" />
+        <result column="execution_time" property="executionTime" jdbcType="BIGINT" />
+        <result column="last_run_time" property="lastRunTime" jdbcType="TIMESTAMP" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="response_code" property="responseCode" jdbcType="INTEGER" />
+        <result column="status" property="status" jdbcType="VARCHAR" />
+        <result column="module" property="module" jdbcType="VARCHAR" />
+        <result column="curl_command" property="curlCommand" jdbcType="LONGVARCHAR" />
+        <result column="result" property="result" jdbcType="LONGVARCHAR" />
     </resultMap>
 
     <!-- 基础字段 -->
     <sql id="Base_Column_List">
-        id, name, curl_command, description, status, result, error_message,
-        execution_time, response_code, last_run_time, enabled, created_time, updated_time
+        id, create_time, description, enabled, error_message, execution_time, last_run_time,
+    name, response_code, status, module
     </sql>
 
     <!-- 根据状态查询API测试列表 -->
@@ -131,7 +131,7 @@
 
     <!-- 根据描述关键词查询 -->
     <select id="selectByDescriptionKeyword" resultMap="BaseResultMap">
-        SELECT * FROM api_test 
+        SELECT * FROM api_test
         WHERE description LIKE CONCAT('%', #{keyword}, '%')
         ORDER BY created_time DESC
     </select>
@@ -141,7 +141,7 @@
         SELECT * FROM api_test
         <where>
             <if test="params.search != null and params.search != ''">
-                AND (name LIKE CONCAT('%', #{params.search}, '%') 
+                AND (name LIKE CONCAT('%', #{params.search}, '%')
                 OR description LIKE CONCAT('%', #{params.search}, '%'))
             </if>
             <if test="params.status != null and params.status != ''">
@@ -150,22 +150,22 @@
         </where>
         <choose>
             <when test="params.sortBy == 'name'">
-                ORDER BY name 
+                ORDER BY name
                 <if test="params.sortOrder == 'desc'">DESC</if>
                 <if test="params.sortOrder == 'asc'">ASC</if>
             </when>
             <when test="params.sortBy == 'status'">
-                ORDER BY status 
+                ORDER BY status
                 <if test="params.sortOrder == 'desc'">DESC</if>
                 <if test="params.sortOrder == 'asc'">ASC</if>
             </when>
             <when test="params.sortBy == 'lastRunTime'">
-                ORDER BY last_run_time 
+                ORDER BY last_run_time
                 <if test="params.sortOrder == 'desc'">DESC</if>
                 <if test="params.sortOrder == 'asc'">ASC</if>
             </when>
             <when test="params.sortBy == 'executionTime'">
-                ORDER BY execution_time 
+                ORDER BY execution_time
                 <if test="params.sortOrder == 'desc'">DESC</if>
                 <if test="params.sortOrder == 'asc'">ASC</if>
             </when>
@@ -181,7 +181,7 @@
         SELECT COUNT(*) FROM api_test
         <where>
             <if test="params.search != null and params.search != ''">
-                AND (name LIKE CONCAT('%', #{params.search}, '%') 
+                AND (name LIKE CONCAT('%', #{params.search}, '%')
                 OR description LIKE CONCAT('%', #{params.search}, '%'))
             </if>
             <if test="params.status != null and params.status != ''">

@@ -25,6 +25,7 @@ public class ApiTest {
     private Integer responseCode;
     @Column(length = 1000)
     private String errorMessage;
+    private String module;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastRunTime;
