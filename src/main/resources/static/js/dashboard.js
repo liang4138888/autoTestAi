@@ -406,6 +406,7 @@ function viewTestDetail(testId) {
     }
 
     new bootstrap.Modal(document.getElementById('testDetailModal')).show();
+    loadTestHistory(); // 保证每次打开详情都刷新历史
 }
 
 // 执行单个测试（从详情页面）
@@ -553,31 +554,31 @@ function updateSelectedCount() {
     const tableSelectAll = document.getElementById('tableSelectAll');
     const batchOperationArea = document.getElementById('batchOperationArea');
     const selectedCount = document.getElementById('selectedCount');
-    
+
     const selectedCountNum = selectedCheckboxes.length;
-    
+
     // 更新选中数量显示
     selectedCount.textContent = selectedCountNum;
-    
+
     // 显示/隐藏批量操作区域
     if (selectedCountNum > 0) {
         batchOperationArea.style.display = 'block';
     } else {
         batchOperationArea.style.display = 'none';
     }
-    
+
     // 更新执行选中测试按钮状态
     executeSelectedBtn.disabled = selectedCountNum === 0;
-    
+
     // 更新全选复选框状态
     const allCheckboxes = document.querySelectorAll('.test-checkbox:not(:disabled), .table-test-checkbox:not(:disabled)');
     const allChecked = allCheckboxes.length > 0 && selectedCountNum === allCheckboxes.length;
-    
+
     if (selectAllCheckbox) {
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = selectedCountNum > 0 && !allChecked;
     }
-    
+
     if (tableSelectAll) {
         tableSelectAll.checked = allChecked;
         tableSelectAll.indeterminate = selectedCountNum > 0 && !allChecked;
@@ -713,7 +714,7 @@ function updateSearchStatus() {
         if (currentSearch) conditions.push(`关键词: "${currentSearch}"`);
         if (currentStatus) conditions.push(`状态: ${getStatusText(currentStatus)}`);
         if (currentModule) conditions.push(`模块: ${currentModule}`);
-        
+
         if (conditions.length > 0) {
             statusText = conditions.join(', ');
         }
@@ -811,7 +812,7 @@ function loadTestHistory() {
                             ${history.map(record => `
                                 <tr>
                                     <td>
-                                        <small class="text-muted">${formatDateTime(record.executionTime)}</small>
+                                        <small class="text-muted">${formatDateTime(record.runTime)}</small>
                                     </td>
                                     <td>
                                         <span class="badge ${getStatusBadgeClass(record.status)}">${getStatusText(record.status)}</span>

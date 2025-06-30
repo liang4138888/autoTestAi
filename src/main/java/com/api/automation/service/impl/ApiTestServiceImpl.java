@@ -123,7 +123,7 @@ public class ApiTestServiceImpl implements ApiTestService {
         long failed = all.stream().filter(test -> "FAILED".equals(test.getStatus())).count();
         long running = all.stream().filter(test -> "RUNNING".equals(test.getStatus())).count();
         long notExecuted = all.stream().filter(test -> test.getStatus() == null).count();
-        
+
         stats.put("total", total);
         stats.put("success", success);
         stats.put("failed", failed);
@@ -150,7 +150,7 @@ public class ApiTestServiceImpl implements ApiTestService {
         if (apiTestMapper.selectCount(null) > 0) {
             return;
         }
-        
+
         // 创建示例数据
         List<ApiTest> sampleTests = Arrays.asList(
             createSampleTest("用户登录API", "curl -X POST http://localhost:8080/api/login -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"123456\"}'", "测试用户登录功能", "首页"),
@@ -159,13 +159,13 @@ public class ApiTestServiceImpl implements ApiTestService {
             createSampleTest("更新用户", "curl -X PUT http://localhost:8080/api/user/1 -H 'Content-Type: application/json' -d '{\"name\":\"李四\",\"email\":\"lisi@example.com\"}'", "测试更新用户功能", "我的"),
             createSampleTest("删除用户", "curl -X DELETE http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试删除用户功能", "我的")
         );
-        
+
         sampleTests.forEach(test -> {
             test.setStatus("NOT_EXECUTED");
             apiTestMapper.insert(test);
         });
     }
-    
+
     /**
      * 创建示例测试的辅助方法
      */
@@ -181,10 +181,10 @@ public class ApiTestServiceImpl implements ApiTestService {
     @Override
     public Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String module, String sortBy, String sortOrder) {
         Map<String, Object> result = new HashMap<>();
-        
+
         // 计算偏移量
         int offset = (page - 1) * size;
-        
+
         // 构建查询条件
         Map<String, Object> params = new HashMap<>();
         params.put("offset", offset);
@@ -194,14 +194,14 @@ public class ApiTestServiceImpl implements ApiTestService {
         params.put("module", module);
         params.put("sortBy", sortBy);
         params.put("sortOrder", sortOrder);
-        
+
         // 查询数据
         List<ApiTest> tests = apiTestMapper.selectByPage(params);
         int total = apiTestMapper.selectCountByPage(params);
-        
+
         // 计算总页数
         int totalPages = (int) Math.ceil((double) total / size);
-        
+
         result.put("content", tests);
         result.put("totalElements", total);
         result.put("totalPages", totalPages);
@@ -209,7 +209,7 @@ public class ApiTestServiceImpl implements ApiTestService {
         result.put("pageSize", size);
         result.put("hasNext", page < totalPages);
         result.put("hasPrevious", page > 1);
-        
+
         return result;
     }
-} 
+}
