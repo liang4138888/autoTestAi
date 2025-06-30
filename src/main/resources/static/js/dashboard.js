@@ -12,6 +12,7 @@ let totalElements = 0;
 let totalPages = 0;
 let currentSearch = '';
 let currentStatus = '';
+let currentModule = '';
 let currentSortBy = 'name';
 let currentSortOrder = 'asc';
 
@@ -75,6 +76,10 @@ function loadTestsByPage() {
         params.append('status', currentStatus);
     }
 
+    if (currentModule) {
+        params.append('module', currentModule);
+    }
+
     fetch(`/api/tests/page?${params}`)
         .then(response => response.json())
         .then(data => {
@@ -131,6 +136,7 @@ function renderTableView(container, testsToRender) {
                             <input type="checkbox" class="form-check-input" id="tableSelectAll" onchange="toggleTableSelectAll()">
                         </th>
                         <th>测试名称</th>
+                        <th>模块</th>
                         <th>状态</th>
                         <th>描述</th>
                         <th>执行时间</th>
@@ -163,6 +169,9 @@ function createTableRow(test) {
         <td>
             <div class="fw-bold">${test.name}</div>
             <small class="text-muted">ID: ${test.id}</small>
+        </td>
+        <td>
+            ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
         </td>
         <td>
             <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
@@ -206,7 +215,10 @@ function createTestItem(test) {
                     <input type="checkbox" class="form-check-input me-2 test-checkbox" 
                            value="${test.id}" onchange="updateSelectedCount()" 
                            ${test.enabled ? '' : 'disabled'}>
-                    <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                    <div>
+                        <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                        ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
+                    </div>
                 </div>
                 <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
             </div>
@@ -376,6 +388,7 @@ function viewTestDetail(testId) {
 
     document.getElementById('detailTitle').textContent = test.name;
     document.getElementById('detailName').textContent = test.name;
+    document.getElementById('detailModule').textContent = test.module || '无模块';
     document.getElementById('detailStatus').innerHTML = `<span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>`;
     document.getElementById('detailExecutionTime').textContent = test.executionTime ? test.executionTime + 'ms' : '未执行';
     document.getElementById('detailLastRun').textContent = test.lastRunTime ? formatDateTime(test.lastRunTime) : '未执行';
@@ -413,9 +426,10 @@ function showAddModal() {
 function addTest() {
     const name = document.getElementById('testName').value.trim();
     const curlCommand = document.getElementById('curlCommand').value.trim();
+    const module = document.getElementById('testModule').value.trim();
     const description = document.getElementById('testDescription').value.trim();
 
-    if (!name || !curlCommand) {
+    if (!name || !curlCommand || !module) {
         showToast('请填写必填字段', 'error');
         return;
     }
@@ -423,6 +437,7 @@ function addTest() {
     const test = {
         name: name,
         curlCommand: curlCommand,
+        module: module,
         description: description
     };
 
@@ -637,11 +652,13 @@ function filterTests() {
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value;
     const statusFilter = document.getElementById('statusFilter').value;
+    const moduleFilter = document.getElementById('moduleFilter').value;
     const sortBy = document.getElementById('sortBy').value;
 
     // 更新当前筛选和排序条件
     currentSearch = searchTerm;
     currentStatus = statusFilter;
+    currentModule = moduleFilter;
     currentSortBy = sortBy;
     currentPage = 1; // 重置到第一页
 
@@ -652,10 +669,11 @@ function performSearch() {
     loadTestsByPage();
 
     // 显示搜索提示
-    if (searchTerm || statusFilter) {
+    if (searchTerm || statusFilter || moduleFilter) {
         const searchInfo = [];
         if (searchTerm) searchInfo.push(`关键词: "${searchTerm}"`);
         if (statusFilter) searchInfo.push(`状态: ${getStatusText(statusFilter)}`);
+        if (moduleFilter) searchInfo.push(`模块: ${moduleFilter}`);
         showToast(`搜索条件: ${searchInfo.join(', ')}`, 'info');
     }
 }
@@ -664,11 +682,13 @@ function performSearch() {
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';
+    document.getElementById('moduleFilter').value = '';
     document.getElementById('sortBy').value = 'name';
 
     // 重置搜索条件
     currentSearch = '';
     currentStatus = '';
+    currentModule = '';
     currentSortBy = 'name';
     currentSortOrder = 'asc';
     currentPage = 1;
@@ -684,17 +704,18 @@ function clearSearch() {
 // 更新搜索状态指示器
 function updateSearchStatus() {
     const searchStatus = document.getElementById('searchStatus');
-    const hasSearchCondition = currentSearch || currentStatus;
+    const hasSearchCondition = currentSearch || currentStatus || currentModule;
 
     if (hasSearchCondition) {
         searchStatus.style.display = 'inline-block';
         let statusText = '已筛选';
-        if (currentSearch && currentStatus) {
-            statusText = `关键词: "${currentSearch}", 状态: ${getStatusText(currentStatus)}`;
-        } else if (currentSearch) {
-            statusText = `关键词: "${currentSearch}"`;
-        } else if (currentStatus) {
-            statusText = `状态: ${getStatusText(currentStatus)}`;
+        const conditions = [];
+        if (currentSearch) conditions.push(`关键词: "${currentSearch}"`);
+        if (currentStatus) conditions.push(`状态: ${getStatusText(currentStatus)}`);
+        if (currentModule) conditions.push(`模块: ${currentModule}`);
+        
+        if (conditions.length > 0) {
+            statusText = conditions.join(', ');
         }
         searchStatus.title = statusText;
     } else {

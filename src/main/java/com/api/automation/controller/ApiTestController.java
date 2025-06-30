@@ -285,14 +285,15 @@ public class ApiTestController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String module,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder) {
         
-        logger.debug("分页查询API测试: page={}, size={}, search={}, status={}, sortBy={}, sortOrder={}", 
-                    page, size, search, status, sortBy, sortOrder);
+        logger.debug("分页查询API测试: page={}, size={}, search={}, status={}, module={}, sortBy={}, sortOrder={}", 
+                    page, size, search, status, module, sortBy, sortOrder);
         
         try {
-            Map<String, Object> result = apiTestService.getApiTestsByPage(page, size, search, status, sortBy, sortOrder);
+            Map<String, Object> result = apiTestService.getApiTestsByPage(page, size, search, status, module, sortBy, sortOrder);
             logger.info("分页查询成功: 总数={}, 当前页={}, 页大小={}", 
                        result.get("totalElements"), result.get("currentPage"), result.get("pageSize"));
             return ResponseEntity.ok(result);

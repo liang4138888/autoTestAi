@@ -145,4 +145,12 @@ public class ApiTest {
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
 }

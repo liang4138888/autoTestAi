@@ -290,6 +290,13 @@
                                 <option value="RUNNING">执行中</option>
                                 <option value="NOT_EXECUTED">未执行</option>
                             </select>
+                            <select class="form-select" id="moduleFilter" onchange="performSearch()" style="width: 150px;">
+                                <option value="">全部模块</option>
+                                <option value="首页">首页</option>
+                                <option value="分类">分类</option>
+                                <option value="搜索">搜索</option>
+                                <option value="我的">我的</option>
+                            </select>
                             <select class="form-select" id="sortBy" onchange="performSearch()" style="width: 150px;">
                                 <option value="name">按名称排序</option>
                                 <option value="status">按状态排序</option>
@@ -382,6 +389,16 @@
                             <div class="form-text">请输入完整的curl命令</div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">模块 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="testModule" required>
+                                <option value="">请选择模块</option>
+                                <option value="首页">首页</option>
+                                <option value="分类">分类</option>
+                                <option value="搜索">搜索</option>
+                                <option value="我的">我的</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">描述</label>
                             <textarea class="form-control" id="testDescription" rows="2"
                                       placeholder="请输入测试描述（可选）"></textarea>
@@ -428,6 +445,7 @@
                                     <h6><i class="bi bi-card-text"></i> 基本信息</h6>
                                     <table class="table table-sm">
                                         <tr><td><strong>名称:</strong></td><td id="detailName"></td></tr>
+                                        <tr><td><strong>模块:</strong></td><td id="detailModule"></td></tr>
                                         <tr><td><strong>状态:</strong></td><td id="detailStatus"></td></tr>
                                         <tr><td><strong>执行时间:</strong></td><td id="detailExecutionTime"></td></tr>
                                         <tr><td><strong>最后执行:</strong></td><td id="detailLastRun"></td></tr>

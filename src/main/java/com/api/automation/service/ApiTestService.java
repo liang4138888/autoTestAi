@@ -65,5 +65,5 @@ public interface ApiTestService {
     /**
      * 分页查询API测试（支持筛选和排序）
      */
-    Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String sortBy, String sortOrder);
+    Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String module, String sortBy, String sortOrder);
 } 

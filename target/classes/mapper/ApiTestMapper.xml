@@ -147,6 +147,9 @@
             <if test="params.status != null and params.status != ''">
                 AND status = #{params.status}
             </if>
+            <if test="params.module != null and params.module != ''">
+                AND module = #{params.module}
+            </if>
         </where>
         <choose>
             <when test="params.sortBy == 'name'">
@@ -186,6 +189,9 @@
             </if>
             <if test="params.status != null and params.status != ''">
                 AND status = #{params.status}
+            </if>
+            <if test="params.module != null and params.module != ''">
+                AND module = #{params.module}
             </if>
         </where>
     </select>

@@ -153,11 +153,11 @@ public class ApiTestServiceImpl implements ApiTestService {
         
         // 创建示例数据
         List<ApiTest> sampleTests = Arrays.asList(
-            new ApiTest("用户登录API", "curl -X POST http://localhost:8080/api/login -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"123456\"}'", "测试用户登录功能"),
-            new ApiTest("获取用户信息", "curl -X GET http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试获取用户信息功能"),
-            new ApiTest("创建用户", "curl -X POST http://localhost:8080/api/user -H 'Content-Type: application/json' -d '{\"name\":\"张三\",\"email\":\"zhangsan@example.com\"}'", "测试创建用户功能"),
-            new ApiTest("更新用户", "curl -X PUT http://localhost:8080/api/user/1 -H 'Content-Type: application/json' -d '{\"name\":\"李四\",\"email\":\"lisi@example.com\"}'", "测试更新用户功能"),
-            new ApiTest("删除用户", "curl -X DELETE http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试删除用户功能")
+            createSampleTest("用户登录API", "curl -X POST http://localhost:8080/api/login -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"123456\"}'", "测试用户登录功能", "首页"),
+            createSampleTest("获取用户信息", "curl -X GET http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试获取用户信息功能", "我的"),
+            createSampleTest("创建用户", "curl -X POST http://localhost:8080/api/user -H 'Content-Type: application/json' -d '{\"name\":\"张三\",\"email\":\"zhangsan@example.com\"}'", "测试创建用户功能", "首页"),
+            createSampleTest("更新用户", "curl -X PUT http://localhost:8080/api/user/1 -H 'Content-Type: application/json' -d '{\"name\":\"李四\",\"email\":\"lisi@example.com\"}'", "测试更新用户功能", "我的"),
+            createSampleTest("删除用户", "curl -X DELETE http://localhost:8080/api/user/1 -H 'Authorization: Bearer token123'", "测试删除用户功能", "我的")
         );
         
         sampleTests.forEach(test -> {
@@ -165,12 +165,21 @@ public class ApiTestServiceImpl implements ApiTestService {
             apiTestMapper.insert(test);
         });
     }
+    
+    /**
+     * 创建示例测试的辅助方法
+     */
+    private ApiTest createSampleTest(String name, String curlCommand, String description, String module) {
+        ApiTest test = new ApiTest(name, curlCommand, description);
+        test.setModule(module);
+        return test;
+    }
 
     /**
      * 分页查询API测试（支持筛选和排序）
      */
     @Override
-    public Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String sortBy, String sortOrder) {
+    public Map<String, Object> getApiTestsByPage(int page, int size, String search, String status, String module, String sortBy, String sortOrder) {
         Map<String, Object> result = new HashMap<>();
         
         // 计算偏移量
@@ -182,6 +191,7 @@ public class ApiTestServiceImpl implements ApiTestService {
         params.put("size", size);
         params.put("search", search);
         params.put("status", status);
+        params.put("module", module);
         params.put("sortBy", sortBy);
         params.put("sortOrder", sortOrder);
         
