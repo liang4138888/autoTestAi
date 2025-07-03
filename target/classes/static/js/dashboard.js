@@ -12,6 +12,7 @@ let totalElements = 0;
 let totalPages = 0;
 let currentSearch = '';
 let currentStatus = '';
+let currentModule = '';
 let currentSortBy = 'name';
 let currentSortOrder = 'asc';
 
@@ -75,6 +76,10 @@ function loadTestsByPage() {
         params.append('status', currentStatus);
     }
 
+    if (currentModule) {
+        params.append('module', currentModule);
+    }
+
     fetch(`/api/tests/page?${params}`)
         .then(response => response.json())
         .then(data => {
@@ -93,7 +98,7 @@ function loadTestsByPage() {
         });
 }
 
-// 渲染测试列表
+// 渲染测试列表-
 function renderTestList() {
     const testList = document.getElementById('testList');
     testList.innerHTML = '';
@@ -131,6 +136,7 @@ function renderTableView(container, testsToRender) {
                             <input type="checkbox" class="form-check-input" id="tableSelectAll" onchange="toggleTableSelectAll()">
                         </th>
                         <th>测试名称</th>
+                        <th>模块</th>
                         <th>状态</th>
                         <th>描述</th>
                         <th>执行时间</th>
@@ -163,6 +169,9 @@ function createTableRow(test) {
         <td>
             <div class="fw-bold">${test.name}</div>
             <small class="text-muted">ID: ${test.id}</small>
+        </td>
+        <td>
+            ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
         </td>
         <td>
             <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
@@ -206,7 +215,10 @@ function createTestItem(test) {
                     <input type="checkbox" class="form-check-input me-2 test-checkbox" 
                            value="${test.id}" onchange="updateSelectedCount()" 
                            ${test.enabled ? '' : 'disabled'}>
-                    <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                    <div>
+                        <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                        ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
+                    </div>
                 </div>
                 <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
             </div>
@@ -274,16 +286,24 @@ function getStatusText(status) {
 
 // 更新统计信息
 function updateStatistics() {
-    const stats = {
-        total: tests.length,
-        success: tests.filter(t => t.status === 'SUCCESS').length,
-        failed: tests.filter(t => t.status === 'FAILED').length,
-        running: tests.filter(t => t.status === 'RUNNING').length
-    };
-
-    stats.successRate = stats.total > 0 ? Math.round((stats.success / stats.total) * 100) : 0;
-
-    updateStatisticsDisplay(stats);
+    // 从后端获取最新的统计数据
+    fetch('/api/tests/statistics')
+        .then(response => response.json())
+        .then(stats => {
+            updateStatisticsDisplay(stats);
+        })
+        .catch(error => {
+            console.error('获取统计数据失败:', error);
+            // 如果获取失败，使用本地数据作为备选
+            const localStats = {
+                total: tests.length,
+                success: tests.filter(t => t.status === 'SUCCESS').length,
+                failed: tests.filter(t => t.status === 'FAILED').length,
+                running: tests.filter(t => t.status === 'RUNNING').length
+            };
+            localStats.successRate = localStats.total > 0 ? Math.round((localStats.success / localStats.total) * 100) : 0;
+            updateStatisticsDisplay(localStats);
+        });
 }
 
 // 更新统计信息显示
@@ -311,6 +331,8 @@ function executeTest(testId) {
         .then(response => response.json())
         .then(data => {
             showToast('测试执行已开始', 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('执行测试失败:', error);
@@ -336,6 +358,8 @@ function executeAll() {
         .then(response => response.json())
         .then(data => {
             showToast(`开始执行 ${data.count} 个测试`, 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('批量执行失败:', error);
@@ -376,6 +400,7 @@ function viewTestDetail(testId) {
 
     document.getElementById('detailTitle').textContent = test.name;
     document.getElementById('detailName').textContent = test.name;
+    document.getElementById('detailModule').textContent = test.module || '无模块';
     document.getElementById('detailStatus').innerHTML = `<span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>`;
     document.getElementById('detailExecutionTime').textContent = test.executionTime ? test.executionTime + 'ms' : '未执行';
     document.getElementById('detailLastRun').textContent = test.lastRunTime ? formatDateTime(test.lastRunTime) : '未执行';
@@ -393,6 +418,7 @@ function viewTestDetail(testId) {
     }
 
     new bootstrap.Modal(document.getElementById('testDetailModal')).show();
+    loadTestHistory(); // 保证每次打开详情都刷新历史
 }
 
 // 执行单个测试（从详情页面）
@@ -413,9 +439,10 @@ function showAddModal() {
 function addTest() {
     const name = document.getElementById('testName').value.trim();
     const curlCommand = document.getElementById('curlCommand').value.trim();
+    const module = document.getElementById('testModule').value.trim();
     const description = document.getElementById('testDescription').value.trim();
 
-    if (!name || !curlCommand) {
+    if (!name || !curlCommand || !module) {
         showToast('请填写必填字段', 'error');
         return;
     }
@@ -423,6 +450,7 @@ function addTest() {
     const test = {
         name: name,
         curlCommand: curlCommand,
+        module: module,
         description: description
     };
 
@@ -538,31 +566,31 @@ function updateSelectedCount() {
     const tableSelectAll = document.getElementById('tableSelectAll');
     const batchOperationArea = document.getElementById('batchOperationArea');
     const selectedCount = document.getElementById('selectedCount');
-    
+
     const selectedCountNum = selectedCheckboxes.length;
-    
+
     // 更新选中数量显示
     selectedCount.textContent = selectedCountNum;
-    
+
     // 显示/隐藏批量操作区域
     if (selectedCountNum > 0) {
         batchOperationArea.style.display = 'block';
     } else {
         batchOperationArea.style.display = 'none';
     }
-    
+
     // 更新执行选中测试按钮状态
     executeSelectedBtn.disabled = selectedCountNum === 0;
-    
+
     // 更新全选复选框状态
     const allCheckboxes = document.querySelectorAll('.test-checkbox:not(:disabled), .table-test-checkbox:not(:disabled)');
     const allChecked = allCheckboxes.length > 0 && selectedCountNum === allCheckboxes.length;
-    
+
     if (selectAllCheckbox) {
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = selectedCountNum > 0 && !allChecked;
     }
-    
+
     if (tableSelectAll) {
         tableSelectAll.checked = allChecked;
         tableSelectAll.indeterminate = selectedCountNum > 0 && !allChecked;
@@ -607,6 +635,8 @@ function executeSelected() {
         // 清空选择
         selectedCheckboxes.forEach(checkbox => checkbox.checked = false);
         updateSelectedCount();
+        // 重新获取统计数据
+        updateStatistics();
     })
     .catch(error => {
         console.error('批量执行失败:', error);
@@ -637,11 +667,13 @@ function filterTests() {
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value;
     const statusFilter = document.getElementById('statusFilter').value;
+    const moduleFilter = document.getElementById('moduleFilter').value;
     const sortBy = document.getElementById('sortBy').value;
 
     // 更新当前筛选和排序条件
     currentSearch = searchTerm;
     currentStatus = statusFilter;
+    currentModule = moduleFilter;
     currentSortBy = sortBy;
     currentPage = 1; // 重置到第一页
 
@@ -652,10 +684,11 @@ function performSearch() {
     loadTestsByPage();
 
     // 显示搜索提示
-    if (searchTerm || statusFilter) {
+    if (searchTerm || statusFilter || moduleFilter) {
         const searchInfo = [];
         if (searchTerm) searchInfo.push(`关键词: "${searchTerm}"`);
         if (statusFilter) searchInfo.push(`状态: ${getStatusText(statusFilter)}`);
+        if (moduleFilter) searchInfo.push(`模块: ${moduleFilter}`);
         showToast(`搜索条件: ${searchInfo.join(', ')}`, 'info');
     }
 }
@@ -664,11 +697,13 @@ function performSearch() {
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';
+    document.getElementById('moduleFilter').value = '';
     document.getElementById('sortBy').value = 'name';
 
     // 重置搜索条件
     currentSearch = '';
     currentStatus = '';
+    currentModule = '';
     currentSortBy = 'name';
     currentSortOrder = 'asc';
     currentPage = 1;
@@ -684,17 +719,18 @@ function clearSearch() {
 // 更新搜索状态指示器
 function updateSearchStatus() {
     const searchStatus = document.getElementById('searchStatus');
-    const hasSearchCondition = currentSearch || currentStatus;
+    const hasSearchCondition = currentSearch || currentStatus || currentModule;
 
     if (hasSearchCondition) {
         searchStatus.style.display = 'inline-block';
         let statusText = '已筛选';
-        if (currentSearch && currentStatus) {
-            statusText = `关键词: "${currentSearch}", 状态: ${getStatusText(currentStatus)}`;
-        } else if (currentSearch) {
-            statusText = `关键词: "${currentSearch}"`;
-        } else if (currentStatus) {
-            statusText = `状态: ${getStatusText(currentStatus)}`;
+        const conditions = [];
+        if (currentSearch) conditions.push(`关键词: "${currentSearch}"`);
+        if (currentStatus) conditions.push(`状态: ${getStatusText(currentStatus)}`);
+        if (currentModule) conditions.push(`模块: ${currentModule}`);
+
+        if (conditions.length > 0) {
+            statusText = conditions.join(', ');
         }
         searchStatus.title = statusText;
     } else {
@@ -790,7 +826,7 @@ function loadTestHistory() {
                             ${history.map(record => `
                                 <tr>
                                     <td>
-                                        <small class="text-muted">${formatDateTime(record.executionTime)}</small>
+                                        <small class="text-muted">${formatDateTime(record.runTime)}</small>
                                     </td>
                                     <td>
                                         <span class="badge ${getStatusBadgeClass(record.status)}">${getStatusText(record.status)}</span>
