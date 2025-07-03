@@ -286,16 +286,24 @@ function getStatusText(status) {
 
 // 更新统计信息
 function updateStatistics() {
-    const stats = {
-        total: tests.length,
-        success: tests.filter(t => t.status === 'SUCCESS').length,
-        failed: tests.filter(t => t.status === 'FAILED').length,
-        running: tests.filter(t => t.status === 'RUNNING').length
-    };
-
-    stats.successRate = stats.total > 0 ? Math.round((stats.success / stats.total) * 100) : 0;
-
-    updateStatisticsDisplay(stats);
+    // 从后端获取最新的统计数据
+    fetch('/api/tests/statistics')
+        .then(response => response.json())
+        .then(stats => {
+            updateStatisticsDisplay(stats);
+        })
+        .catch(error => {
+            console.error('获取统计数据失败:', error);
+            // 如果获取失败，使用本地数据作为备选
+            const localStats = {
+                total: tests.length,
+                success: tests.filter(t => t.status === 'SUCCESS').length,
+                failed: tests.filter(t => t.status === 'FAILED').length,
+                running: tests.filter(t => t.status === 'RUNNING').length
+            };
+            localStats.successRate = localStats.total > 0 ? Math.round((localStats.success / localStats.total) * 100) : 0;
+            updateStatisticsDisplay(localStats);
+        });
 }
 
 // 更新统计信息显示
@@ -323,6 +331,8 @@ function executeTest(testId) {
         .then(response => response.json())
         .then(data => {
             showToast('测试执行已开始', 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('执行测试失败:', error);
@@ -348,6 +358,8 @@ function executeAll() {
         .then(response => response.json())
         .then(data => {
             showToast(`开始执行 ${data.count} 个测试`, 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('批量执行失败:', error);
@@ -623,6 +635,8 @@ function executeSelected() {
         // 清空选择
         selectedCheckboxes.forEach(checkbox => checkbox.checked = false);
         updateSelectedCount();
+        // 重新获取统计数据
+        updateStatistics();
     })
     .catch(error => {
         console.error('批量执行失败:', error);

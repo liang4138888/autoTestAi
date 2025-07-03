@@ -77,6 +77,7 @@ public class ApiTestRecord {
         this.responseCode = test.getResponseCode();
         this.errorMessage = test.getErrorMessage();
         this.executionTime = test.getExecutionTime();
+        this.module = test.getModule();
     }
 
     public String getId() {

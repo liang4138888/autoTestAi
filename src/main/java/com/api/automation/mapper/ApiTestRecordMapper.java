@@ -76,4 +76,9 @@ public interface ApiTestRecordMapper extends BaseMapper<ApiTestRecord> {
      * 查询最近的执行记录（所有测试）
      */
     List<ApiTestRecord> selectRecentRecords(@Param("limit") int limit);
+    
+    /**
+     * 获取总体统计信息（总执行次数、成功次数、失败次数、成功率）
+     */
+    Map<String, Object> getOverallStatistics();
 } 

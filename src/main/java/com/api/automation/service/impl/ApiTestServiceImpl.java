@@ -85,6 +85,11 @@ public class ApiTestServiceImpl implements ApiTestService {
         // 记录执行历史
         apiTestRecordMapper.insert(new ApiTestRecord(result));
         webSocketService.sendApiTestUpdate(result);
+        
+        // 发送统计信息更新
+        Map<String, Object> statistics = getStatistics();
+        webSocketService.sendStatisticsUpdate(statistics);
+        
         return result;
     }
 
@@ -109,6 +114,10 @@ public class ApiTestServiceImpl implements ApiTestService {
             .filter(ApiTest::getEnabled)
             .collect(Collectors.toList());
         enabledTests.forEach(test -> executeApiTest(test.getId()));
+        
+        // 批量执行完成后发送统计更新
+        Map<String, Object> statistics = getStatistics();
+        webSocketService.sendStatisticsUpdate(statistics);
     }
 
     /**
@@ -116,20 +125,28 @@ public class ApiTestServiceImpl implements ApiTestService {
      */
     @Override
     public Map<String, Object> getStatistics() {
-        List<ApiTest> all = getAllApiTests();
-        Map<String, Object> stats = new HashMap<>();
-        long total = all.size();
-        long success = all.stream().filter(test -> "SUCCESS".equals(test.getStatus())).count();
-        long failed = all.stream().filter(test -> "FAILED".equals(test.getStatus())).count();
-        long running = all.stream().filter(test -> "RUNNING".equals(test.getStatus())).count();
-        long notExecuted = all.stream().filter(test -> test.getStatus() == null).count();
-
-        stats.put("total", total);
-        stats.put("success", success);
-        stats.put("failed", failed);
-        stats.put("running", running);
-        stats.put("notExecuted", notExecuted);
-        stats.put("successRate", total > 0 ? (double) success / total * 100 : 0);
+        // 从 api_test_record 表获取统计信息
+        Map<String, Object> stats = apiTestRecordMapper.getOverallStatistics();
+        
+        // 如果没有执行记录，返回默认值
+        if (stats == null || stats.get("total") == null) {
+            stats = new HashMap<>();
+            stats.put("total", 0);
+            stats.put("success", 0);
+            stats.put("failed", 0);
+            stats.put("running", 0);
+            stats.put("notExecuted", 0);
+            stats.put("successRate", 0.0);
+        } else {
+            // 确保所有字段都存在
+            stats.putIfAbsent("total", 0);
+            stats.putIfAbsent("success", 0);
+            stats.putIfAbsent("failed", 0);
+            stats.putIfAbsent("running", 0);
+            stats.putIfAbsent("notExecuted", 0);
+            stats.putIfAbsent("successRate", 0.0);
+        }
+        
         return stats;
     }
 
