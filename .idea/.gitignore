@@ -1,17 +1,10 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
-# Editor-based HTTP Client requests
-
-/httpRequests/
+**/src/main/resources/bootstrap-local.properties
+HELP.md
 target/
+.gradle/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-/logs/
+!**/src/main/**
+!**/src/test/**
 
 ### STS ###
 .apt_generated
@@ -35,8 +28,9 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+/logs/
+/log.path_IS_UNDEFINED/
+
