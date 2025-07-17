@@ -4,6 +4,7 @@ let currentTestId = null;
 let tests = [];
 let filteredTests = [];
 let currentViewMode = 'card'; // 'card' 或 'table'
+let currentModule = 'dashboard'; // 当前选中的模块
 
 // 分页相关变量
 let currentPage = 1;
@@ -12,7 +13,7 @@ let totalElements = 0;
 let totalPages = 0;
 let currentSearch = '';
 let currentStatus = '';
-let currentModule = '';
+let currentModuleFilter = '';
 let currentSortBy = 'name';
 let currentSortOrder = 'asc';
 
@@ -20,6 +21,260 @@ let currentSortOrder = 'asc';
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
     refreshData();
+    initializeSidebar();
+});
+
+// 初始化侧边栏
+function initializeSidebar() {
+    // 为菜单项添加点击事件
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const module = this.getAttribute('data-module');
+            switchModule(module);
+        });
+    });
+}
+
+// 切换模块
+function switchModule(module) {
+    // 移除所有菜单项的active状态
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+        const badge = item.querySelector('.badge');
+        if (badge) {
+            badge.textContent = badge.textContent === '当前' ? '开发中' : badge.textContent;
+            badge.className = badge.className.replace('bg-primary', 'bg-secondary');
+        }
+    });
+
+    // 设置当前模块为active
+    const currentMenuItem = document.querySelector(`[data-module="${module}"]`);
+    if (currentMenuItem) {
+        currentMenuItem.classList.add('active');
+        const badge = currentMenuItem.querySelector('.badge');
+        if (badge) {
+            badge.textContent = '当前';
+            badge.className = badge.className.replace('bg-secondary', 'bg-primary');
+        }
+    }
+
+    currentModule = module;
+    
+    // 根据模块更新页面内容
+    switch(module) {
+        case 'dashboard':
+            // 用例大盘 - 当前页面
+            restoreDashboardContent();
+            break;
+        case 'test-management':
+            // 测试管理 - 开发中
+            showModuleUnderDevelopment('测试管理');
+            break;
+        case 'test-execution':
+            // 执行中心 - 开发中
+            showModuleUnderDevelopment('执行中心');
+            break;
+        case 'reports':
+            // 报告分析 - 开发中
+            showModuleUnderDevelopment('报告分析');
+            break;
+        case 'settings':
+            // 系统设置 - 开发中
+            showModuleUnderDevelopment('系统设置');
+            break;
+        case 'help':
+            // 帮助文档
+            showHelpPage();
+            break;
+        case 'about':
+            // 关于系统
+            showAboutPage();
+            break;
+        default:
+            break;
+    }
+}
+
+// 恢复用例大盘内容
+function restoreDashboardContent() {
+    // 重新加载页面内容
+    location.reload();
+}
+
+// 更新页面标题
+function updatePageTitle(title, subtitle) {
+    const headerTitle = document.querySelector('.header-gradient h1');
+    const headerSubtitle = document.querySelector('.header-gradient p');
+    
+    if (headerTitle) {
+        headerTitle.innerHTML = `<i class="bi bi-speedometer2"></i> ${title}`;
+    }
+    if (headerSubtitle) {
+        headerSubtitle.textContent = subtitle;
+    }
+}
+
+// 显示模块开发中页面
+function showModuleUnderDevelopment(moduleName) {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-tools"></i> ${moduleName}
+                </h1>
+                <p class="mb-0 opacity-75">该模块正在开发中，敬请期待</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="card shadow-sm">
+                    <div class="card-body py-5">
+                        <i class="bi bi-tools text-primary" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 text-primary">${moduleName}</h3>
+                        <p class="text-muted">该功能模块正在积极开发中，我们将尽快为您提供完整的解决方案。</p>
+                        <div class="mt-4">
+                            <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                                <i class="bi bi-arrow-left"></i> 返回用例大盘
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 显示帮助页面
+function showHelpPage() {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-question-circle"></i> 帮助文档
+                </h1>
+                <p class="mb-0 opacity-75">AutoTestAI 使用指南</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4><i class="bi bi-book"></i> 快速开始</h4>
+                        <hr>
+                        <h5>1. 添加测试用例</h5>
+                        <p>点击"添加测试"按钮，填写测试名称、Curl命令和模块信息，即可创建新的API测试用例。</p>
+                        
+                        <h5>2. 执行测试</h5>
+                        <p>选择单个测试用例点击"执行"按钮，或使用"执行所有测试"批量执行所有用例。</p>
+                        
+                        <h5>3. 查看结果</h5>
+                        <p>测试执行完成后，可以查看详细的执行结果、响应数据和错误信息。</p>
+                        
+                        <h5>4. 监控统计</h5>
+                        <p>在用例大盘中实时查看测试执行统计信息，包括成功率、执行时间等关键指标。</p>
+                        
+                        <h4 class="mt-4"><i class="bi bi-lightbulb"></i> 使用技巧</h4>
+                        <hr>
+                        <ul>
+                            <li>使用搜索和筛选功能快速找到需要的测试用例</li>
+                            <li>通过卡片视图和表格视图切换不同的展示方式</li>
+                            <li>批量选择测试用例进行批量操作</li>
+                            <li>查看执行历史了解测试用例的执行趋势</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5><i class="bi bi-info-circle"></i> 联系支持</h5>
+                        <p>如果您在使用过程中遇到问题，请联系我们的技术支持团队。</p>
+                        <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                            <i class="bi bi-arrow-left"></i> 返回用例大盘
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 显示关于页面
+function showAboutPage() {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-info-circle"></i> 关于系统
+                </h1>
+                <p class="mb-0 opacity-75">AutoTestAI API自动化测试平台</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-robot text-primary" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 text-primary">AutoTestAI</h3>
+                        <p class="text-muted">AI驱动的API自动化测试平台</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5><i class="bi bi-gear"></i> 技术栈</h5>
+                                <ul class="list-unstyled text-muted">
+                                    <li>Spring Boot</li>
+                                    <li>MyBatis Plus</li>
+                                    <li>WebSocket</li>
+                                    <li>Bootstrap 5</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="bi bi-star"></i> 核心功能</h5>
+                                <ul class="list-unstyled text-muted">
+                                    <li>API测试用例管理</li>
+                                    <li>自动化执行</li>
+                                    <li>实时监控</li>
+                                    <li>结果分析</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                                <i class="bi bi-arrow-left"></i> 返回用例大盘
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 切换移动端侧边栏
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('show');
+}
+
+// 点击主内容区域时关闭移动端侧边栏
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    
+    if (window.innerWidth <= 768) {
+        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('show');
+        }
+    }
 });
 
 // 连接WebSocket
@@ -76,8 +331,8 @@ function loadTestsByPage() {
         params.append('status', currentStatus);
     }
 
-    if (currentModule) {
-        params.append('module', currentModule);
+    if (currentModuleFilter) {
+        params.append('module', currentModuleFilter);
     }
 
     fetch(`/api/tests/page?${params}`)
@@ -673,7 +928,7 @@ function performSearch() {
     // 更新当前筛选和排序条件
     currentSearch = searchTerm;
     currentStatus = statusFilter;
-    currentModule = moduleFilter;
+    currentModuleFilter = moduleFilter;
     currentSortBy = sortBy;
     currentPage = 1; // 重置到第一页
 
@@ -703,7 +958,7 @@ function clearSearch() {
     // 重置搜索条件
     currentSearch = '';
     currentStatus = '';
-    currentModule = '';
+    currentModuleFilter = '';
     currentSortBy = 'name';
     currentSortOrder = 'asc';
     currentPage = 1;
@@ -719,7 +974,7 @@ function clearSearch() {
 // 更新搜索状态指示器
 function updateSearchStatus() {
     const searchStatus = document.getElementById('searchStatus');
-    const hasSearchCondition = currentSearch || currentStatus || currentModule;
+    const hasSearchCondition = currentSearch || currentStatus || currentModuleFilter;
 
     if (hasSearchCondition) {
         searchStatus.style.display = 'inline-block';
@@ -727,7 +982,7 @@ function updateSearchStatus() {
         const conditions = [];
         if (currentSearch) conditions.push(`关键词: "${currentSearch}"`);
         if (currentStatus) conditions.push(`状态: ${getStatusText(currentStatus)}`);
-        if (currentModule) conditions.push(`模块: ${currentModule}`);
+        if (currentModuleFilter) conditions.push(`模块: ${currentModuleFilter}`);
 
         if (conditions.length > 0) {
             statusText = conditions.join(', ');
