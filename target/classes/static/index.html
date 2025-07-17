@@ -11,6 +11,116 @@
             background-color: #f8f9fa;
         }
 
+        /* 侧边栏样式 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .sidebar-header p {
+            color: rgba(255,255,255,0.7);
+            margin: 5px 0 0 0;
+            font-size: 0.9em;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 12px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-left-color: #3498db;
+        }
+
+        .menu-item.active {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: white;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-item .badge {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 主内容区域样式 */
+        .main-content {
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block !important;
+            }
+        }
+
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
         .status-success { color: #28a745; }
         .status-failed { color: #dc3545; }
         .status-running { color: #ffc107; }
@@ -382,6 +492,16 @@
                             <div class="form-text">请输入完整的curl命令</div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">模块 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="testModule" required>
+                                <option value="">请选择模块</option>
+                                <option value="首页">首页</option>
+                                <option value="分类">分类</option>
+                                <option value="搜索">搜索</option>
+                                <option value="我的">我的</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">描述</label>
                             <textarea class="form-control" id="testDescription" rows="2"
                                       placeholder="请输入测试描述（可选）"></textarea>
@@ -428,6 +548,7 @@
                                     <h6><i class="bi bi-card-text"></i> 基本信息</h6>
                                     <table class="table table-sm">
                                         <tr><td><strong>名称:</strong></td><td id="detailName"></td></tr>
+                                        <tr><td><strong>模块:</strong></td><td id="detailModule"></td></tr>
                                         <tr><td><strong>状态:</strong></td><td id="detailStatus"></td></tr>
                                         <tr><td><strong>执行时间:</strong></td><td id="detailExecutionTime"></td></tr>
                                         <tr><td><strong>最后执行:</strong></td><td id="detailLastRun"></td></tr>
