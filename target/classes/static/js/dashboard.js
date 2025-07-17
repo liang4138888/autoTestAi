@@ -7,7 +7,7 @@ let currentViewMode = 'card'; // 'card' 或 'table'
 
 // 分页相关变量
 let currentPage = 1;
-let pageSize = 12;
+let pageSize = 10;
 let totalElements = 0;
 let totalPages = 0;
 let currentSearch = '';
