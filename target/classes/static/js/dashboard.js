@@ -4,6 +4,7 @@ let currentTestId = null;
 let tests = [];
 let filteredTests = [];
 let currentViewMode = 'card'; // 'card' 或 'table'
+let currentModule = 'dashboard'; // 当前选中的模块
 
 // 分页相关变量
 let currentPage = 1;
@@ -12,6 +13,7 @@ let totalElements = 0;
 let totalPages = 0;
 let currentSearch = '';
 let currentStatus = '';
+let currentModuleFilter = '';
 let currentSortBy = 'name';
 let currentSortOrder = 'asc';
 
@@ -19,6 +21,260 @@ let currentSortOrder = 'asc';
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
     refreshData();
+    initializeSidebar();
+});
+
+// 初始化侧边栏
+function initializeSidebar() {
+    // 为菜单项添加点击事件
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const module = this.getAttribute('data-module');
+            switchModule(module);
+        });
+    });
+}
+
+// 切换模块
+function switchModule(module) {
+    // 移除所有菜单项的active状态
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+        const badge = item.querySelector('.badge');
+        if (badge) {
+            badge.textContent = badge.textContent === '当前' ? '开发中' : badge.textContent;
+            badge.className = badge.className.replace('bg-primary', 'bg-secondary');
+        }
+    });
+
+    // 设置当前模块为active
+    const currentMenuItem = document.querySelector(`[data-module="${module}"]`);
+    if (currentMenuItem) {
+        currentMenuItem.classList.add('active');
+        const badge = currentMenuItem.querySelector('.badge');
+        if (badge) {
+            badge.textContent = '当前';
+            badge.className = badge.className.replace('bg-secondary', 'bg-primary');
+        }
+    }
+
+    currentModule = module;
+    
+    // 根据模块更新页面内容
+    switch(module) {
+        case 'dashboard':
+            // 用例大盘 - 当前页面
+            restoreDashboardContent();
+            break;
+        case 'test-management':
+            // 测试管理 - 开发中
+            showModuleUnderDevelopment('测试管理');
+            break;
+        case 'test-execution':
+            // 执行中心 - 开发中
+            showModuleUnderDevelopment('执行中心');
+            break;
+        case 'reports':
+            // 报告分析 - 开发中
+            showModuleUnderDevelopment('报告分析');
+            break;
+        case 'settings':
+            // 系统设置 - 开发中
+            showModuleUnderDevelopment('系统设置');
+            break;
+        case 'help':
+            // 帮助文档
+            showHelpPage();
+            break;
+        case 'about':
+            // 关于系统
+            showAboutPage();
+            break;
+        default:
+            break;
+    }
+}
+
+// 恢复用例大盘内容
+function restoreDashboardContent() {
+    // 重新加载页面内容
+    location.reload();
+}
+
+// 更新页面标题
+function updatePageTitle(title, subtitle) {
+    const headerTitle = document.querySelector('.header-gradient h1');
+    const headerSubtitle = document.querySelector('.header-gradient p');
+    
+    if (headerTitle) {
+        headerTitle.innerHTML = `<i class="bi bi-speedometer2"></i> ${title}`;
+    }
+    if (headerSubtitle) {
+        headerSubtitle.textContent = subtitle;
+    }
+}
+
+// 显示模块开发中页面
+function showModuleUnderDevelopment(moduleName) {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-tools"></i> ${moduleName}
+                </h1>
+                <p class="mb-0 opacity-75">该模块正在开发中，敬请期待</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="card shadow-sm">
+                    <div class="card-body py-5">
+                        <i class="bi bi-tools text-primary" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 text-primary">${moduleName}</h3>
+                        <p class="text-muted">该功能模块正在积极开发中，我们将尽快为您提供完整的解决方案。</p>
+                        <div class="mt-4">
+                            <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                                <i class="bi bi-arrow-left"></i> 返回用例大盘
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 显示帮助页面
+function showHelpPage() {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-question-circle"></i> 帮助文档
+                </h1>
+                <p class="mb-0 opacity-75">AutoTestAI 使用指南</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4><i class="bi bi-book"></i> 快速开始</h4>
+                        <hr>
+                        <h5>1. 添加测试用例</h5>
+                        <p>点击"添加测试"按钮，填写测试名称、Curl命令和模块信息，即可创建新的API测试用例。</p>
+                        
+                        <h5>2. 执行测试</h5>
+                        <p>选择单个测试用例点击"执行"按钮，或使用"执行所有测试"批量执行所有用例。</p>
+                        
+                        <h5>3. 查看结果</h5>
+                        <p>测试执行完成后，可以查看详细的执行结果、响应数据和错误信息。</p>
+                        
+                        <h5>4. 监控统计</h5>
+                        <p>在用例大盘中实时查看测试执行统计信息，包括成功率、执行时间等关键指标。</p>
+                        
+                        <h4 class="mt-4"><i class="bi bi-lightbulb"></i> 使用技巧</h4>
+                        <hr>
+                        <ul>
+                            <li>使用搜索和筛选功能快速找到需要的测试用例</li>
+                            <li>通过卡片视图和表格视图切换不同的展示方式</li>
+                            <li>批量选择测试用例进行批量操作</li>
+                            <li>查看执行历史了解测试用例的执行趋势</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5><i class="bi bi-info-circle"></i> 联系支持</h5>
+                        <p>如果您在使用过程中遇到问题，请联系我们的技术支持团队。</p>
+                        <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                            <i class="bi bi-arrow-left"></i> 返回用例大盘
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 显示关于页面
+function showAboutPage() {
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-info-circle"></i> 关于系统
+                </h1>
+                <p class="mb-0 opacity-75">AutoTestAI API自动化测试平台</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-robot text-primary" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 text-primary">AutoTestAI</h3>
+                        <p class="text-muted">AI驱动的API自动化测试平台</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5><i class="bi bi-gear"></i> 技术栈</h5>
+                                <ul class="list-unstyled text-muted">
+                                    <li>Spring Boot</li>
+                                    <li>MyBatis Plus</li>
+                                    <li>WebSocket</li>
+                                    <li>Bootstrap 5</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="bi bi-star"></i> 核心功能</h5>
+                                <ul class="list-unstyled text-muted">
+                                    <li>API测试用例管理</li>
+                                    <li>自动化执行</li>
+                                    <li>实时监控</li>
+                                    <li>结果分析</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button class="btn btn-primary" onclick="switchModule('dashboard')">
+                                <i class="bi bi-arrow-left"></i> 返回用例大盘
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 切换移动端侧边栏
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('show');
+}
+
+// 点击主内容区域时关闭移动端侧边栏
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    
+    if (window.innerWidth <= 768) {
+        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('show');
+        }
+    }
 });
 
 // 连接WebSocket
@@ -73,6 +329,10 @@ function loadTestsByPage() {
 
     if (currentStatus) {
         params.append('status', currentStatus);
+    }
+
+    if (currentModuleFilter) {
+        params.append('module', currentModuleFilter);
     }
 
     fetch(`/api/tests/page?${params}`)
@@ -131,6 +391,7 @@ function renderTableView(container, testsToRender) {
                             <input type="checkbox" class="form-check-input" id="tableSelectAll" onchange="toggleTableSelectAll()">
                         </th>
                         <th>测试名称</th>
+                        <th>模块</th>
                         <th>状态</th>
                         <th>描述</th>
                         <th>执行时间</th>
@@ -163,6 +424,9 @@ function createTableRow(test) {
         <td>
             <div class="fw-bold">${test.name}</div>
             <small class="text-muted">ID: ${test.id}</small>
+        </td>
+        <td>
+            ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
         </td>
         <td>
             <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
@@ -206,7 +470,10 @@ function createTestItem(test) {
                     <input type="checkbox" class="form-check-input me-2 test-checkbox" 
                            value="${test.id}" onchange="updateSelectedCount()" 
                            ${test.enabled ? '' : 'disabled'}>
-                    <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                    <div>
+                        <h6 class="mb-0 text-truncate" title="${test.name}">${test.name}</h6>
+                        ${test.module ? `<small class="text-muted"><i class="bi bi-tags"></i> ${test.module}</small>` : ''}
+                    </div>
                 </div>
                 <span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>
             </div>
@@ -274,16 +541,24 @@ function getStatusText(status) {
 
 // 更新统计信息
 function updateStatistics() {
-    const stats = {
-        total: tests.length,
-        success: tests.filter(t => t.status === 'SUCCESS').length,
-        failed: tests.filter(t => t.status === 'FAILED').length,
-        running: tests.filter(t => t.status === 'RUNNING').length
-    };
-
-    stats.successRate = stats.total > 0 ? Math.round((stats.success / stats.total) * 100) : 0;
-
-    updateStatisticsDisplay(stats);
+    // 从后端获取最新的统计数据
+    fetch('/api/tests/statistics')
+        .then(response => response.json())
+        .then(stats => {
+            updateStatisticsDisplay(stats);
+        })
+        .catch(error => {
+            console.error('获取统计数据失败:', error);
+            // 如果获取失败，使用本地数据作为备选
+            const localStats = {
+                total: tests.length,
+                success: tests.filter(t => t.status === 'SUCCESS').length,
+                failed: tests.filter(t => t.status === 'FAILED').length,
+                running: tests.filter(t => t.status === 'RUNNING').length
+            };
+            localStats.successRate = localStats.total > 0 ? Math.round((localStats.success / localStats.total) * 100) : 0;
+            updateStatisticsDisplay(localStats);
+        });
 }
 
 // 更新统计信息显示
@@ -311,6 +586,8 @@ function executeTest(testId) {
         .then(response => response.json())
         .then(data => {
             showToast('测试执行已开始', 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('执行测试失败:', error);
@@ -336,6 +613,8 @@ function executeAll() {
         .then(response => response.json())
         .then(data => {
             showToast(`开始执行 ${data.count} 个测试`, 'success');
+            // 重新获取统计数据
+            updateStatistics();
         })
         .catch(error => {
             console.error('批量执行失败:', error);
@@ -376,6 +655,7 @@ function viewTestDetail(testId) {
 
     document.getElementById('detailTitle').textContent = test.name;
     document.getElementById('detailName').textContent = test.name;
+    document.getElementById('detailModule').textContent = test.module || '无模块';
     document.getElementById('detailStatus').innerHTML = `<span class="badge ${getStatusBadgeClass(test.status)}">${getStatusText(test.status)}</span>`;
     document.getElementById('detailExecutionTime').textContent = test.executionTime ? test.executionTime + 'ms' : '未执行';
     document.getElementById('detailLastRun').textContent = test.lastRunTime ? formatDateTime(test.lastRunTime) : '未执行';
@@ -393,6 +673,7 @@ function viewTestDetail(testId) {
     }
 
     new bootstrap.Modal(document.getElementById('testDetailModal')).show();
+    loadTestHistory(); // 保证每次打开详情都刷新历史
 }
 
 // 执行单个测试（从详情页面）
@@ -413,9 +694,10 @@ function showAddModal() {
 function addTest() {
     const name = document.getElementById('testName').value.trim();
     const curlCommand = document.getElementById('curlCommand').value.trim();
+    const module = document.getElementById('testModule').value.trim();
     const description = document.getElementById('testDescription').value.trim();
 
-    if (!name || !curlCommand) {
+    if (!name || !curlCommand || !module) {
         showToast('请填写必填字段', 'error');
         return;
     }
@@ -423,6 +705,7 @@ function addTest() {
     const test = {
         name: name,
         curlCommand: curlCommand,
+        module: module,
         description: description
     };
 
@@ -538,31 +821,31 @@ function updateSelectedCount() {
     const tableSelectAll = document.getElementById('tableSelectAll');
     const batchOperationArea = document.getElementById('batchOperationArea');
     const selectedCount = document.getElementById('selectedCount');
-    
+
     const selectedCountNum = selectedCheckboxes.length;
-    
+
     // 更新选中数量显示
     selectedCount.textContent = selectedCountNum;
-    
+
     // 显示/隐藏批量操作区域
     if (selectedCountNum > 0) {
         batchOperationArea.style.display = 'block';
     } else {
         batchOperationArea.style.display = 'none';
     }
-    
+
     // 更新执行选中测试按钮状态
     executeSelectedBtn.disabled = selectedCountNum === 0;
-    
+
     // 更新全选复选框状态
     const allCheckboxes = document.querySelectorAll('.test-checkbox:not(:disabled), .table-test-checkbox:not(:disabled)');
     const allChecked = allCheckboxes.length > 0 && selectedCountNum === allCheckboxes.length;
-    
+
     if (selectAllCheckbox) {
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = selectedCountNum > 0 && !allChecked;
     }
-    
+
     if (tableSelectAll) {
         tableSelectAll.checked = allChecked;
         tableSelectAll.indeterminate = selectedCountNum > 0 && !allChecked;
@@ -607,6 +890,8 @@ function executeSelected() {
         // 清空选择
         selectedCheckboxes.forEach(checkbox => checkbox.checked = false);
         updateSelectedCount();
+        // 重新获取统计数据
+        updateStatistics();
     })
     .catch(error => {
         console.error('批量执行失败:', error);
@@ -637,11 +922,13 @@ function filterTests() {
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value;
     const statusFilter = document.getElementById('statusFilter').value;
+    const moduleFilter = document.getElementById('moduleFilter').value;
     const sortBy = document.getElementById('sortBy').value;
 
     // 更新当前筛选和排序条件
     currentSearch = searchTerm;
     currentStatus = statusFilter;
+    currentModuleFilter = moduleFilter;
     currentSortBy = sortBy;
     currentPage = 1; // 重置到第一页
 
@@ -652,10 +939,11 @@ function performSearch() {
     loadTestsByPage();
 
     // 显示搜索提示
-    if (searchTerm || statusFilter) {
+    if (searchTerm || statusFilter || moduleFilter) {
         const searchInfo = [];
         if (searchTerm) searchInfo.push(`关键词: "${searchTerm}"`);
         if (statusFilter) searchInfo.push(`状态: ${getStatusText(statusFilter)}`);
+        if (moduleFilter) searchInfo.push(`模块: ${moduleFilter}`);
         showToast(`搜索条件: ${searchInfo.join(', ')}`, 'info');
     }
 }
@@ -664,11 +952,13 @@ function performSearch() {
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';
+    document.getElementById('moduleFilter').value = '';
     document.getElementById('sortBy').value = 'name';
 
     // 重置搜索条件
     currentSearch = '';
     currentStatus = '';
+    currentModuleFilter = '';
     currentSortBy = 'name';
     currentSortOrder = 'asc';
     currentPage = 1;
@@ -684,17 +974,18 @@ function clearSearch() {
 // 更新搜索状态指示器
 function updateSearchStatus() {
     const searchStatus = document.getElementById('searchStatus');
-    const hasSearchCondition = currentSearch || currentStatus;
+    const hasSearchCondition = currentSearch || currentStatus || currentModuleFilter;
 
     if (hasSearchCondition) {
         searchStatus.style.display = 'inline-block';
         let statusText = '已筛选';
-        if (currentSearch && currentStatus) {
-            statusText = `关键词: "${currentSearch}", 状态: ${getStatusText(currentStatus)}`;
-        } else if (currentSearch) {
-            statusText = `关键词: "${currentSearch}"`;
-        } else if (currentStatus) {
-            statusText = `状态: ${getStatusText(currentStatus)}`;
+        const conditions = [];
+        if (currentSearch) conditions.push(`关键词: "${currentSearch}"`);
+        if (currentStatus) conditions.push(`状态: ${getStatusText(currentStatus)}`);
+        if (currentModuleFilter) conditions.push(`模块: ${currentModuleFilter}`);
+
+        if (conditions.length > 0) {
+            statusText = conditions.join(', ');
         }
         searchStatus.title = statusText;
     } else {
@@ -790,7 +1081,7 @@ function loadTestHistory() {
                             ${history.map(record => `
                                 <tr>
                                     <td>
-                                        <small class="text-muted">${formatDateTime(record.executionTime)}</small>
+                                        <small class="text-muted">${formatDateTime(record.runTime)}</small>
                                     </td>
                                     <td>
                                         <span class="badge ${getStatusBadgeClass(record.status)}">${getStatusText(record.status)}</span>
