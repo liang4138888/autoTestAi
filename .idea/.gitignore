@@ -39,6 +39,7 @@ build/
 *.war
 *.ear
 target
+*.log
 
 
 
