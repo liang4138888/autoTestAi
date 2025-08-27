@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.api.automation.mapper.BugUserMapper" >
+  <resultMap id="BaseResultMap" type="com.api.automation.model.BugUser" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="bug_id" property="bugId" jdbcType="VARCHAR" />
+    <result column="user_type" property="userType" jdbcType="VARCHAR" />
+    <result column="iam_user_id" property="iamUserId" jdbcType="BIGINT" />
+    <result column="iam_user_real_name" property="iamUserRealName" jdbcType="VARCHAR" />
+    <result column="cause" property="cause" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, bug_id, user_type, iam_user_id, iam_user_real_name, cause
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from bug_user
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from bug_user
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.api.automation.model.BugUser" >
+    insert into bug_user (id, bug_id, user_type, 
+      iam_user_id, iam_user_real_name, cause
+      )
+    values (#{id,jdbcType=VARCHAR}, #{bugId,jdbcType=VARCHAR}, #{userType,jdbcType=VARCHAR}, 
+      #{iamUserId,jdbcType=BIGINT}, #{iamUserRealName,jdbcType=VARCHAR}, #{cause,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.api.automation.model.BugUser" >
+    insert into bug_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="bugId != null" >
+        bug_id,
+      </if>
+      <if test="userType != null" >
+        user_type,
+      </if>
+      <if test="iamUserId != null" >
+        iam_user_id,
+      </if>
+      <if test="iamUserRealName != null" >
+        iam_user_real_name,
+      </if>
+      <if test="cause != null" >
+        cause,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="bugId != null" >
+        #{bugId,jdbcType=VARCHAR},
+      </if>
+      <if test="userType != null" >
+        #{userType,jdbcType=VARCHAR},
+      </if>
+      <if test="iamUserId != null" >
+        #{iamUserId,jdbcType=BIGINT},
+      </if>
+      <if test="iamUserRealName != null" >
+        #{iamUserRealName,jdbcType=VARCHAR},
+      </if>
+      <if test="cause != null" >
+        #{cause,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.api.automation.model.BugUser" >
+    update bug_user
+    <set >
+      <if test="bugId != null" >
+        bug_id = #{bugId,jdbcType=VARCHAR},
+      </if>
+      <if test="userType != null" >
+        user_type = #{userType,jdbcType=VARCHAR},
+      </if>
+      <if test="iamUserId != null" >
+        iam_user_id = #{iamUserId,jdbcType=BIGINT},
+      </if>
+      <if test="iamUserRealName != null" >
+        iam_user_real_name = #{iamUserRealName,jdbcType=VARCHAR},
+      </if>
+      <if test="cause != null" >
+        cause = #{cause,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.api.automation.model.BugUser" >
+    update bug_user
+    set bug_id = #{bugId,jdbcType=VARCHAR},
+      user_type = #{userType,jdbcType=VARCHAR},
+      iam_user_id = #{iamUserId,jdbcType=BIGINT},
+      iam_user_real_name = #{iamUserRealName,jdbcType=VARCHAR},
+      cause = #{cause,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

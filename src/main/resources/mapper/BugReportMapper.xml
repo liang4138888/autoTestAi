@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.api.automation.mapper.BugReportMapper" >
+  <resultMap id="BaseResultMap" type="com.api.automation.model.BugReport" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="project_id" property="projectId" jdbcType="BIGINT" />
+    <result column="project_name" property="projectName" jdbcType="VARCHAR" />
+    <result column="title" property="title" jdbcType="VARCHAR" />
+    <result column="demand_id" property="demandId" jdbcType="BIGINT" />
+    <result column="demand_name" property="demandName" jdbcType="VARCHAR" />
+    <result column="iteration_id" property="iterationId" jdbcType="BIGINT" />
+    <result column="iteration_name" property="iterationName" jdbcType="VARCHAR" />
+    <result column="component_id" property="componentId" jdbcType="BIGINT" />
+    <result column="component_name" property="componentName" jdbcType="VARCHAR" />
+    <result column="test_plan_id" property="testPlanId" jdbcType="BIGINT" />
+    <result column="test_plan_name" property="testPlanName" jdbcType="VARCHAR" />
+    <result column="found_stage" property="foundStage" jdbcType="VARCHAR" />
+    <result column="severity" property="severity" jdbcType="VARCHAR" />
+    <result column="priority" property="priority" jdbcType="VARCHAR" />
+    <result column="bug_reason" property="bugReason" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="VARCHAR" />
+    <result column="complement_status" property="complementStatus" jdbcType="VARCHAR" />
+    <result column="reopen" property="reopen" jdbcType="INTEGER" />
+    <result column="retesting" property="retesting" jdbcType="INTEGER" />
+    <result column="deleted" property="deleted" jdbcType="BIT" />
+    <result column="organization_id" property="organizationId" jdbcType="BIGINT" />
+    <result column="block_length" property="blockLength" jdbcType="INTEGER" />
+    <result column="creation_date" property="creationDate" jdbcType="TIMESTAMP" />
+    <result column="last_update_date" property="lastUpdateDate" jdbcType="TIMESTAMP" />
+    <result column="created_by" property="createdBy" jdbcType="BIGINT" />
+    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="BIGINT" />
+    <result column="created_user_name" property="createdUserName" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="ResultMapWithBLOBs" type="com.api.automation.model.BugReport" extends="BaseResultMap" >
+    <result column="bug_desc" property="bugDesc" jdbcType="LONGVARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, project_id, project_name, title, demand_id, demand_name, iteration_id, iteration_name, 
+    component_id, component_name, test_plan_id, test_plan_name, found_stage, severity, 
+    priority, bug_reason, status, complement_status, reopen, retesting, deleted, organization_id, 
+    block_length, creation_date, last_update_date, created_by, last_updated_by, created_user_name
+  </sql>
+  <sql id="Blob_Column_List" >
+    bug_desc
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from bug_report
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from bug_report
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.api.automation.model.BugReport" >
+    insert into bug_report (id, project_id, project_name, 
+      title, demand_id, demand_name, 
+      iteration_id, iteration_name, component_id, 
+      component_name, test_plan_id, test_plan_name, 
+      found_stage, severity, priority, 
+      bug_reason, status, complement_status, 
+      reopen, retesting, deleted, 
+      organization_id, block_length, creation_date, 
+      last_update_date, created_by, last_updated_by, 
+      created_user_name, bug_desc)
+    values (#{id,jdbcType=VARCHAR}, #{projectId,jdbcType=BIGINT}, #{projectName,jdbcType=VARCHAR}, 
+      #{title,jdbcType=VARCHAR}, #{demandId,jdbcType=BIGINT}, #{demandName,jdbcType=VARCHAR}, 
+      #{iterationId,jdbcType=BIGINT}, #{iterationName,jdbcType=VARCHAR}, #{componentId,jdbcType=BIGINT}, 
+      #{componentName,jdbcType=VARCHAR}, #{testPlanId,jdbcType=BIGINT}, #{testPlanName,jdbcType=VARCHAR}, 
+      #{foundStage,jdbcType=VARCHAR}, #{severity,jdbcType=VARCHAR}, #{priority,jdbcType=VARCHAR}, 
+      #{bugReason,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{complementStatus,jdbcType=VARCHAR}, 
+      #{reopen,jdbcType=INTEGER}, #{retesting,jdbcType=INTEGER}, #{deleted,jdbcType=BIT}, 
+      #{organizationId,jdbcType=BIGINT}, #{blockLength,jdbcType=INTEGER}, #{creationDate,jdbcType=TIMESTAMP}, 
+      #{lastUpdateDate,jdbcType=TIMESTAMP}, #{createdBy,jdbcType=BIGINT}, #{lastUpdatedBy,jdbcType=BIGINT}, 
+      #{createdUserName,jdbcType=VARCHAR}, #{bugDesc,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.api.automation.model.BugReport" >
+    insert into bug_report
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="projectId != null" >
+        project_id,
+      </if>
+      <if test="projectName != null" >
+        project_name,
+      </if>
+      <if test="title != null" >
+        title,
+      </if>
+      <if test="demandId != null" >
+        demand_id,
+      </if>
+      <if test="demandName != null" >
+        demand_name,
+      </if>
+      <if test="iterationId != null" >
+        iteration_id,
+      </if>
+      <if test="iterationName != null" >
+        iteration_name,
+      </if>
+      <if test="componentId != null" >
+        component_id,
+      </if>
+      <if test="componentName != null" >
+        component_name,
+      </if>
+      <if test="testPlanId != null" >
+        test_plan_id,
+      </if>
+      <if test="testPlanName != null" >
+        test_plan_name,
+      </if>
+      <if test="foundStage != null" >
+        found_stage,
+      </if>
+      <if test="severity != null" >
+        severity,
+      </if>
+      <if test="priority != null" >
+        priority,
+      </if>
+      <if test="bugReason != null" >
+        bug_reason,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="complementStatus != null" >
+        complement_status,
+      </if>
+      <if test="reopen != null" >
+        reopen,
+      </if>
+      <if test="retesting != null" >
+        retesting,
+      </if>
+      <if test="deleted != null" >
+        deleted,
+      </if>
+      <if test="organizationId != null" >
+        organization_id,
+      </if>
+      <if test="blockLength != null" >
+        block_length,
+      </if>
+      <if test="creationDate != null" >
+        creation_date,
+      </if>
+      <if test="lastUpdateDate != null" >
+        last_update_date,
+      </if>
+      <if test="createdBy != null" >
+        created_by,
+      </if>
+      <if test="lastUpdatedBy != null" >
+        last_updated_by,
+      </if>
+      <if test="createdUserName != null" >
+        created_user_name,
+      </if>
+      <if test="bugDesc != null" >
+        bug_desc,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="projectId != null" >
+        #{projectId,jdbcType=BIGINT},
+      </if>
+      <if test="projectName != null" >
+        #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null" >
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="demandId != null" >
+        #{demandId,jdbcType=BIGINT},
+      </if>
+      <if test="demandName != null" >
+        #{demandName,jdbcType=VARCHAR},
+      </if>
+      <if test="iterationId != null" >
+        #{iterationId,jdbcType=BIGINT},
+      </if>
+      <if test="iterationName != null" >
+        #{iterationName,jdbcType=VARCHAR},
+      </if>
+      <if test="componentId != null" >
+        #{componentId,jdbcType=BIGINT},
+      </if>
+      <if test="componentName != null" >
+        #{componentName,jdbcType=VARCHAR},
+      </if>
+      <if test="testPlanId != null" >
+        #{testPlanId,jdbcType=BIGINT},
+      </if>
+      <if test="testPlanName != null" >
+        #{testPlanName,jdbcType=VARCHAR},
+      </if>
+      <if test="foundStage != null" >
+        #{foundStage,jdbcType=VARCHAR},
+      </if>
+      <if test="severity != null" >
+        #{severity,jdbcType=VARCHAR},
+      </if>
+      <if test="priority != null" >
+        #{priority,jdbcType=VARCHAR},
+      </if>
+      <if test="bugReason != null" >
+        #{bugReason,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="complementStatus != null" >
+        #{complementStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="reopen != null" >
+        #{reopen,jdbcType=INTEGER},
+      </if>
+      <if test="retesting != null" >
+        #{retesting,jdbcType=INTEGER},
+      </if>
+      <if test="deleted != null" >
+        #{deleted,jdbcType=BIT},
+      </if>
+      <if test="organizationId != null" >
+        #{organizationId,jdbcType=BIGINT},
+      </if>
+      <if test="blockLength != null" >
+        #{blockLength,jdbcType=INTEGER},
+      </if>
+      <if test="creationDate != null" >
+        #{creationDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastUpdateDate != null" >
+        #{lastUpdateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createdBy != null" >
+        #{createdBy,jdbcType=BIGINT},
+      </if>
+      <if test="lastUpdatedBy != null" >
+        #{lastUpdatedBy,jdbcType=BIGINT},
+      </if>
+      <if test="createdUserName != null" >
+        #{createdUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="bugDesc != null" >
+        #{bugDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.api.automation.model.BugReport" >
+    update bug_report
+    <set >
+      <if test="projectId != null" >
+        project_id = #{projectId,jdbcType=BIGINT},
+      </if>
+      <if test="projectName != null" >
+        project_name = #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null" >
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="demandId != null" >
+        demand_id = #{demandId,jdbcType=BIGINT},
+      </if>
+      <if test="demandName != null" >
+        demand_name = #{demandName,jdbcType=VARCHAR},
+      </if>
+      <if test="iterationId != null" >
+        iteration_id = #{iterationId,jdbcType=BIGINT},
+      </if>
+      <if test="iterationName != null" >
+        iteration_name = #{iterationName,jdbcType=VARCHAR},
+      </if>
+      <if test="componentId != null" >
+        component_id = #{componentId,jdbcType=BIGINT},
+      </if>
+      <if test="componentName != null" >
+        component_name = #{componentName,jdbcType=VARCHAR},
+      </if>
+      <if test="testPlanId != null" >
+        test_plan_id = #{testPlanId,jdbcType=BIGINT},
+      </if>
+      <if test="testPlanName != null" >
+        test_plan_name = #{testPlanName,jdbcType=VARCHAR},
+      </if>
+      <if test="foundStage != null" >
+        found_stage = #{foundStage,jdbcType=VARCHAR},
+      </if>
+      <if test="severity != null" >
+        severity = #{severity,jdbcType=VARCHAR},
+      </if>
+      <if test="priority != null" >
+        priority = #{priority,jdbcType=VARCHAR},
+      </if>
+      <if test="bugReason != null" >
+        bug_reason = #{bugReason,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="complementStatus != null" >
+        complement_status = #{complementStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="reopen != null" >
+        reopen = #{reopen,jdbcType=INTEGER},
+      </if>
+      <if test="retesting != null" >
+        retesting = #{retesting,jdbcType=INTEGER},
+      </if>
+      <if test="deleted != null" >
+        deleted = #{deleted,jdbcType=BIT},
+      </if>
+      <if test="organizationId != null" >
+        organization_id = #{organizationId,jdbcType=BIGINT},
+      </if>
+      <if test="blockLength != null" >
+        block_length = #{blockLength,jdbcType=INTEGER},
+      </if>
+      <if test="creationDate != null" >
+        creation_date = #{creationDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastUpdateDate != null" >
+        last_update_date = #{lastUpdateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createdBy != null" >
+        created_by = #{createdBy,jdbcType=BIGINT},
+      </if>
+      <if test="lastUpdatedBy != null" >
+        last_updated_by = #{lastUpdatedBy,jdbcType=BIGINT},
+      </if>
+      <if test="createdUserName != null" >
+        created_user_name = #{createdUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="bugDesc != null" >
+        bug_desc = #{bugDesc,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.api.automation.model.BugReport" >
+    update bug_report
+    set project_id = #{projectId,jdbcType=BIGINT},
+      project_name = #{projectName,jdbcType=VARCHAR},
+      title = #{title,jdbcType=VARCHAR},
+      demand_id = #{demandId,jdbcType=BIGINT},
+      demand_name = #{demandName,jdbcType=VARCHAR},
+      iteration_id = #{iterationId,jdbcType=BIGINT},
+      iteration_name = #{iterationName,jdbcType=VARCHAR},
+      component_id = #{componentId,jdbcType=BIGINT},
+      component_name = #{componentName,jdbcType=VARCHAR},
+      test_plan_id = #{testPlanId,jdbcType=BIGINT},
+      test_plan_name = #{testPlanName,jdbcType=VARCHAR},
+      found_stage = #{foundStage,jdbcType=VARCHAR},
+      severity = #{severity,jdbcType=VARCHAR},
+      priority = #{priority,jdbcType=VARCHAR},
+      bug_reason = #{bugReason,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      complement_status = #{complementStatus,jdbcType=VARCHAR},
+      reopen = #{reopen,jdbcType=INTEGER},
+      retesting = #{retesting,jdbcType=INTEGER},
+      deleted = #{deleted,jdbcType=BIT},
+      organization_id = #{organizationId,jdbcType=BIGINT},
+      block_length = #{blockLength,jdbcType=INTEGER},
+      creation_date = #{creationDate,jdbcType=TIMESTAMP},
+      last_update_date = #{lastUpdateDate,jdbcType=TIMESTAMP},
+      created_by = #{createdBy,jdbcType=BIGINT},
+      last_updated_by = #{lastUpdatedBy,jdbcType=BIGINT},
+      created_user_name = #{createdUserName,jdbcType=VARCHAR},
+      bug_desc = #{bugDesc,jdbcType=LONGVARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.api.automation.model.BugReport" >
+    update bug_report
+    set project_id = #{projectId,jdbcType=BIGINT},
+      project_name = #{projectName,jdbcType=VARCHAR},
+      title = #{title,jdbcType=VARCHAR},
+      demand_id = #{demandId,jdbcType=BIGINT},
+      demand_name = #{demandName,jdbcType=VARCHAR},
+      iteration_id = #{iterationId,jdbcType=BIGINT},
+      iteration_name = #{iterationName,jdbcType=VARCHAR},
+      component_id = #{componentId,jdbcType=BIGINT},
+      component_name = #{componentName,jdbcType=VARCHAR},
+      test_plan_id = #{testPlanId,jdbcType=BIGINT},
+      test_plan_name = #{testPlanName,jdbcType=VARCHAR},
+      found_stage = #{foundStage,jdbcType=VARCHAR},
+      severity = #{severity,jdbcType=VARCHAR},
+      priority = #{priority,jdbcType=VARCHAR},
+      bug_reason = #{bugReason,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      complement_status = #{complementStatus,jdbcType=VARCHAR},
+      reopen = #{reopen,jdbcType=INTEGER},
+      retesting = #{retesting,jdbcType=INTEGER},
+      deleted = #{deleted,jdbcType=BIT},
+      organization_id = #{organizationId,jdbcType=BIGINT},
+      block_length = #{blockLength,jdbcType=INTEGER},
+      creation_date = #{creationDate,jdbcType=TIMESTAMP},
+      last_update_date = #{lastUpdateDate,jdbcType=TIMESTAMP},
+      created_by = #{createdBy,jdbcType=BIGINT},
+      last_updated_by = #{lastUpdatedBy,jdbcType=BIGINT},
+      created_user_name = #{createdUserName,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>
