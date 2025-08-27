@@ -138,4 +138,18 @@
         LIMIT #{limit}
     </select>
 
+    <!-- 获取总体统计信息（总执行次数、成功次数、失败次数、成功率） -->
+    <select id="getOverallStatistics" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) as success,
+            SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN status = 'RUNNING' THEN 1 ELSE 0 END) as running,
+            CASE
+                WHEN COUNT(*) = 0 THEN 0
+                ELSE (SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(*))
+            END as successRate
+        FROM api_test_record
+    </select>
+
 </mapper>
