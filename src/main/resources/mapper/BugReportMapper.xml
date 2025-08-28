@@ -411,4 +411,125 @@
       created_user_name = #{createdUserName,jdbcType=VARCHAR}
     where id = #{id,jdbcType=VARCHAR}
   </update>
+
+  <!-- Bug统计查询 -->
+  <!-- Bug提交人员统计 -->
+  <select id="getSubmitterStatistics" resultType="map">
+    SELECT 
+      created_user_name as submitterName,
+      created_by as submitterId,
+      COUNT(*) as bugCount
+    FROM bug_report 
+    WHERE deleted = 0
+    <if test="startTime != null and startTime != ''">
+      AND creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY created_by, created_user_name
+    ORDER BY bugCount DESC, submitterName ASC
+  </select>
+
+  <!-- Bug负责开发人员统计 -->
+  <select id="getDeveloperStatistics" resultType="map">
+    SELECT 
+      bu.iam_user_real_name as developerName,
+      bu.iam_user_id as developerId,
+      COUNT(*) as bugCount
+    FROM bug_report br
+    INNER JOIN bug_user bu ON br.id = bu.bug_id
+    WHERE br.deleted = 0 
+    AND bu.user_type = 'Developer'
+    <if test="startTime != null and startTime != ''">
+      AND br.creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND br.creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY bu.iam_user_id, bu.iam_user_real_name
+    ORDER BY bugCount DESC, developerName ASC
+  </select>
+
+  <!-- Bug状态分布统计 -->
+  <select id="getStatusStatistics" resultType="map">
+    SELECT 
+      status,
+      COUNT(*) as count
+    FROM bug_report 
+    WHERE deleted = 0
+    <if test="startTime != null and startTime != ''">
+      AND creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY status
+    ORDER BY count DESC
+  </select>
+
+  <!-- Bug严重程度分布统计 -->
+  <select id="getSeverityStatistics" resultType="map">
+    SELECT 
+      severity,
+      COUNT(*) as count
+    FROM bug_report 
+    WHERE deleted = 0
+    <if test="startTime != null and startTime != ''">
+      AND creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY severity
+    ORDER BY 
+      CASE severity
+        WHEN 'P1' THEN 1
+        WHEN 'P2' THEN 2  
+        WHEN 'P3' THEN 3
+        WHEN 'P4' THEN 4
+        ELSE 5
+      END
+  </select>
+
+  <!-- Bug优先级分布统计 -->
+  <select id="getPriorityStatistics" resultType="map">
+    SELECT 
+      priority,
+      COUNT(*) as count
+    FROM bug_report 
+    WHERE deleted = 0
+    <if test="startTime != null and startTime != ''">
+      AND creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY priority
+    ORDER BY 
+      CASE priority
+        WHEN 'High' THEN 1
+        WHEN 'Medium' THEN 2
+        WHEN 'Low' THEN 3
+        ELSE 4
+      END
+  </select>
+
+  <!-- Bug趋势统计 -->
+  <select id="getBugTrendStatistics" resultType="map">
+    SELECT 
+      DATE(creation_date) as date,
+      COUNT(*) as count
+    FROM bug_report 
+    WHERE deleted = 0
+    <if test="startTime != null and startTime != ''">
+      AND creation_date >= #{startTime}
+    </if>
+    <if test="endTime != null and endTime != ''">
+      AND creation_date &lt;= #{endTime}
+    </if>
+    GROUP BY DATE(creation_date)
+    ORDER BY date ASC
+  </select>
+
 </mapper>

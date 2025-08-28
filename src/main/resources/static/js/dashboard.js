@@ -77,8 +77,8 @@ function switchModule(module) {
             showModuleUnderDevelopment('执行中心');
             break;
         case 'reports':
-            // 报告分析 - 开发中
-            showModuleUnderDevelopment('报告分析');
+            // 报告分析
+            showReportsPage();
             break;
         case 'settings':
             // 系统设置 - 开发中
@@ -1218,4 +1218,774 @@ function changePageSize() {
         currentPage = 1; // 重置到第一页
         loadTestsByPage();
     }
+}
+
+// ============== Bug报表分析模块 ==============
+
+// 报表分析相关变量
+let reportStartTime = '';
+let reportEndTime = '';
+
+// 显示报表分析页面
+function showReportsPage() {
+    console.log('showReportsPage 函数被调用了');
+    
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    
+    // 先用一个简单的测试页面
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-graph-up"></i> Bug报表分析
+                </h1>
+                <p class="mb-0 opacity-75">Bug统计分析与趋势报告</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-graph-up text-primary" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3 text-primary">Bug报表分析</h3>
+                        <p class="text-muted">正在加载Bug统计数据...</p>
+                        <div class="mt-4">
+                            <button class="btn btn-primary" onclick="loadFullReportsPage()">
+                                <i class="bi bi-bar-chart"></i> 加载完整报表
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    console.log('showReportsPage 执行完成');
+}
+
+// 加载完整的报表分析页面
+function loadFullReportsPage() {
+    console.log('loadFullReportsPage 函数被调用了');
+    
+    const mainContent = document.querySelector('.main-content .container-fluid');
+    
+    // 设置默认时间范围（最近30天）
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    reportStartTime = formatDateTime(thirtyDaysAgo);
+    reportEndTime = formatDateTime(today);
+    
+    mainContent.innerHTML = `
+        <div class="row header-gradient text-white p-4 mb-4">
+            <div class="col text-center">
+                <h1 class="mb-2">
+                    <i class="bi bi-graph-up"></i> Bug报表分析
+                </h1>
+                <p class="mb-0 opacity-75">Bug统计分析与趋势报告</p>
+            </div>
+        </div>
+
+        <!-- 时间筛选区域 -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-calendar-range"></i> 时间范围筛选</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">开始时间</label>
+                                <input type="datetime-local" class="form-control" id="reportStartTime" 
+                                       value="${reportStartTime}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">结束时间</label>
+                                <input type="datetime-local" class="form-control" id="reportEndTime" 
+                                       value="${reportEndTime}">
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary" onclick="refreshReports()">
+                                    <i class="bi bi-search"></i> 查询统计
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="resetTimeRange()">
+                                    <i class="bi bi-arrow-clockwise"></i> 重置
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                            onclick="setTimeRange(7)">最近7天</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                            onclick="setTimeRange(30)">最近30天</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                            onclick="setTimeRange(90)">最近90天</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 概览统计卡片 -->
+        <div class="row mb-4" id="overviewCards">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-bug text-danger fs-1"></i>
+                        <h5 class="card-title mt-2">总Bug数</h5>
+                        <h3 class="text-danger" id="totalBugsCount">--</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-people text-info fs-1"></i>
+                        <h5 class="card-title mt-2">提交人数</h5>
+                        <h3 class="text-info" id="totalSubmittersCount">--</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-code-slash text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">开发人员</h5>
+                        <h3 class="text-warning" id="totalDevelopersCount">--</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-center h-100 shadow-sm stats-card">
+                    <div class="card-body">
+                        <i class="bi bi-calendar-range text-success fs-1"></i>
+                        <h5 class="card-title mt-2">时间范围</h5>
+                        <div class="text-success" id="timeRangeDisplay">
+                            <small id="timeRangeText">最近30天</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要统计报表 -->
+        <div class="row">
+            <!-- Bug提交人员统计 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-person-check"></i> Bug提交人员统计</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportSubmitterData()">
+                            <i class="bi bi-download"></i> 导出
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="submitterChartContainer" style="height: 400px;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bug开发人员统计 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-code-slash"></i> 开发人员Bug统计</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportDeveloperData()">
+                            <i class="bi bi-download"></i> 导出
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="developerChartContainer" style="height: 400px;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详细数据表格 -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-table"></i> 提交人员详细数据</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="submitterTable">
+                                <thead>
+                                    <tr>
+                                        <th>排名</th>
+                                        <th>提交人</th>
+                                        <th>Bug数量</th>
+                                        <th>占比</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="submitterTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-table"></i> 开发人员详细数据</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="developerTable">
+                                <thead>
+                                    <tr>
+                                        <th>排名</th>
+                                        <th>开发人员</th>
+                                        <th>Bug数量</th>
+                                        <th>占比</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="developerTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他统计图表 -->
+        <div class="row">
+            <!-- Bug状态分布 -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Bug状态分布</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="statusChartContainer" style="height: 300px;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bug严重程度分布 -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> 严重程度分布</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="severityChartContainer" style="height: 300px;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bug优先级分布 -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-flag"></i> 优先级分布</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="priorityChartContainer" style="height: 300px;">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 加载统计数据
+    refreshReports();
+}
+
+// 格式化日期时间为HTML datetime-local格式
+function formatDateTime(dateInput) {
+    // 如果输入为空，返回空字符串
+    if (!dateInput) return '';
+    
+    // 创建Date对象，支持字符串和Date对象输入
+    const date = new Date(dateInput);
+    
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) return '';
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// 设置时间范围
+function setTimeRange(days) {
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - days);
+    
+    reportStartTime = formatDateTime(startDate);
+    reportEndTime = formatDateTime(endDate);
+    
+    document.getElementById('reportStartTime').value = reportStartTime;
+    document.getElementById('reportEndTime').value = reportEndTime;
+    
+    // 更新时间范围显示
+    const timeRangeText = document.getElementById('timeRangeText');
+    if (timeRangeText) {
+        timeRangeText.textContent = `最近${days}天`;
+    }
+    
+    refreshReports();
+}
+
+// 重置时间范围
+function resetTimeRange() {
+    setTimeRange(30);
+}
+
+// 刷新报表数据
+function refreshReports() {
+    // 获取时间范围
+    const startTimeInput = document.getElementById('reportStartTime');
+    const endTimeInput = document.getElementById('reportEndTime');
+    
+    if (startTimeInput && endTimeInput) {
+        reportStartTime = startTimeInput.value;
+        reportEndTime = endTimeInput.value;
+    }
+    
+    // 转换为API需要的格式
+    const startTime = reportStartTime ? reportStartTime.replace('T', ' ') + ':00' : null;
+    const endTime = reportEndTime ? reportEndTime.replace('T', ' ') + ':00' : null;
+    
+    console.log('刷新报表数据，时间范围:', startTime, '到', endTime);
+    
+    // 并行加载所有统计数据
+    Promise.all([
+        loadSubmitterStatistics(startTime, endTime),
+        loadDeveloperStatistics(startTime, endTime),
+        loadStatusStatistics(startTime, endTime),
+        loadSeverityStatistics(startTime, endTime),
+        loadPriorityStatistics(startTime, endTime),
+        loadSummaryStatistics(startTime, endTime)
+    ]).then(() => {
+        console.log('所有报表数据加载完成');
+    }).catch(error => {
+        console.error('报表数据加载失败:', error);
+        showToast('报表数据加载失败', 'error');
+    });
+}
+
+// 加载提交人员统计
+async function loadSubmitterStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/submitter?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderSubmitterChart(result.data);
+            renderSubmitterTable(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载提交人员统计失败:', error);
+        document.getElementById('submitterChartContainer').innerHTML = 
+            '<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
+}
+
+// 加载开发人员统计
+async function loadDeveloperStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/developer?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderDeveloperChart(result.data);
+            renderDeveloperTable(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载开发人员统计失败:', error);
+        document.getElementById('developerChartContainer').innerHTML = 
+            '<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
+}
+
+// 加载状态统计
+async function loadStatusStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/status?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderStatusChart(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载状态统计失败:', error);
+        document.getElementById('statusChartContainer').innerHTML = 
+            '<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
+}
+
+// 加载严重程度统计
+async function loadSeverityStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/severity?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderSeverityChart(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载严重程度统计失败:', error);
+        document.getElementById('severityChartContainer').innerHTML = 
+            '<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
+}
+
+// 加载优先级统计
+async function loadPriorityStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/priority?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderPriorityChart(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载优先级统计失败:', error);
+        document.getElementById('priorityChartContainer').innerHTML = 
+            '<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle"></i><p>加载失败</p></div>';
+    }
+}
+
+// 加载综合统计
+async function loadSummaryStatistics(startTime, endTime) {
+    try {
+        const params = new URLSearchParams();
+        if (startTime) params.append('startTime', startTime);
+        if (endTime) params.append('endTime', endTime);
+        
+        const response = await fetch(`/api/bugs/statistics/summary?${params}`);
+        const result = await response.json();
+        
+        if (result.success && result.data.overview) {
+            updateOverviewCards(result.data.overview);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('加载综合统计失败:', error);
+    }
+}
+
+// 更新概览卡片
+function updateOverviewCards(overview) {
+    const totalBugsElement = document.getElementById('totalBugsCount');
+    const totalSubmittersElement = document.getElementById('totalSubmittersCount');
+    const totalDevelopersElement = document.getElementById('totalDevelopersCount');
+    
+    if (totalBugsElement) totalBugsElement.textContent = overview.totalBugs || 0;
+    if (totalSubmittersElement) totalSubmittersElement.textContent = overview.totalSubmitters || 0;
+    if (totalDevelopersElement) totalDevelopersElement.textContent = overview.totalDevelopers || 0;
+}
+
+// 渲染提交人员图表
+function renderSubmitterChart(data) {
+    const container = document.getElementById('submitterChartContainer');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox"></i><p>暂无数据</p></div>';
+        return;
+    }
+    
+    // 取前10名
+    const topData = data.slice(0, 10);
+    
+    let chartHtml = '<div class="chart-bars">';
+    const maxCount = Math.max(...topData.map(item => item.bugCount));
+    
+    topData.forEach((item, index) => {
+        const percentage = (item.bugCount / maxCount) * 100;
+        const barColor = `hsl(${220 + index * 15}, 70%, 50%)`;
+        
+        chartHtml += `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold" title="${item.submitterName}">${item.submitterName}</span>
+                    <span class="badge bg-primary">${item.bugCount}个</span>
+                </div>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: ${percentage}%; background-color: ${barColor};"
+                         title="${item.submitterName}: ${item.bugCount}个Bug"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// 渲染开发人员图表
+function renderDeveloperChart(data) {
+    const container = document.getElementById('developerChartContainer');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox"></i><p>暂无数据</p></div>';
+        return;
+    }
+    
+    // 取前10名
+    const topData = data.slice(0, 10);
+    
+    let chartHtml = '<div class="chart-bars">';
+    const maxCount = Math.max(...topData.map(item => item.bugCount));
+    
+    topData.forEach((item, index) => {
+        const percentage = (item.bugCount / maxCount) * 100;
+        const barColor = `hsl(${30 + index * 15}, 70%, 50%)`;
+        
+        chartHtml += `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold" title="${item.developerName}">${item.developerName}</span>
+                    <span class="badge bg-warning">${item.bugCount}个</span>
+                </div>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: ${percentage}%; background-color: ${barColor};"
+                         title="${item.developerName}: ${item.bugCount}个Bug"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// 渲染提交人员表格
+function renderSubmitterTable(data) {
+    const tbody = document.getElementById('submitterTableBody');
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>';
+        return;
+    }
+    
+    const totalBugs = data.reduce((sum, item) => sum + item.bugCount, 0);
+    
+    let tableHtml = '';
+    data.forEach((item, index) => {
+        const percentage = totalBugs > 0 ? ((item.bugCount / totalBugs) * 100).toFixed(1) : 0;
+        const rankClass = index < 3 ? ['text-warning', 'text-secondary', 'text-success'][index] : '';
+        
+        tableHtml += `
+            <tr>
+                <td><span class="${rankClass} fw-bold">#${index + 1}</span></td>
+                <td>${item.submitterName}</td>
+                <td><span class="badge bg-primary">${item.bugCount}</span></td>
+                <td>${percentage}%</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = tableHtml;
+}
+
+// 渲染开发人员表格
+function renderDeveloperTable(data) {
+    const tbody = document.getElementById('developerTableBody');
+    if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>';
+        return;
+    }
+    
+    const totalBugs = data.reduce((sum, item) => sum + item.bugCount, 0);
+    
+    let tableHtml = '';
+    data.forEach((item, index) => {
+        const percentage = totalBugs > 0 ? ((item.bugCount / totalBugs) * 100).toFixed(1) : 0;
+        const rankClass = index < 3 ? ['text-warning', 'text-secondary', 'text-success'][index] : '';
+        
+        tableHtml += `
+            <tr>
+                <td><span class="${rankClass} fw-bold">#${index + 1}</span></td>
+                <td>${item.developerName}</td>
+                <td><span class="badge bg-warning">${item.bugCount}</span></td>
+                <td>${percentage}%</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = tableHtml;
+}
+
+// 渲染状态饼图
+function renderStatusChart(data) {
+    const container = document.getElementById('statusChartContainer');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox"></i><p>暂无数据</p></div>';
+        return;
+    }
+    
+    const colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#17a2b8'];
+    let chartHtml = '<div class="status-chart">';
+    
+    data.forEach((item, index) => {
+        const color = colors[index % colors.length];
+        chartHtml += `
+            <div class="d-flex align-items-center mb-2">
+                <div class="me-2" style="width: 20px; height: 20px; background-color: ${color}; border-radius: 3px;"></div>
+                <div class="flex-grow-1">
+                    <span class="fw-bold">${item.status || '未知状态'}</span>
+                </div>
+                <span class="badge" style="background-color: ${color};">${item.count}</span>
+            </div>
+        `;
+    });
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// 渲染严重程度饼图
+function renderSeverityChart(data) {
+    const container = document.getElementById('severityChartContainer');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox"></i><p>暂无数据</p></div>';
+        return;
+    }
+    
+    const severityColors = {
+        'P1': '#dc3545',
+        'P2': '#fd7e14',
+        'P3': '#ffc107',
+        'P4': '#28a745'
+    };
+    
+    let chartHtml = '<div class="severity-chart">';
+    
+    data.forEach((item, index) => {
+        const color = severityColors[item.severity] || '#6c757d';
+        chartHtml += `
+            <div class="d-flex align-items-center mb-2">
+                <div class="me-2" style="width: 20px; height: 20px; background-color: ${color}; border-radius: 3px;"></div>
+                <div class="flex-grow-1">
+                    <span class="fw-bold">${item.severity || '未知'}</span>
+                </div>
+                <span class="badge" style="background-color: ${color};">${item.count}</span>
+            </div>
+        `;
+    });
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// 渲染优先级饼图
+function renderPriorityChart(data) {
+    const container = document.getElementById('priorityChartContainer');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox"></i><p>暂无数据</p></div>';
+        return;
+    }
+    
+    const priorityColors = {
+        'High': '#dc3545',
+        'Medium': '#ffc107',
+        'Low': '#28a745'
+    };
+    
+    let chartHtml = '<div class="priority-chart">';
+    
+    data.forEach((item, index) => {
+        const color = priorityColors[item.priority] || '#6c757d';
+        chartHtml += `
+            <div class="d-flex align-items-center mb-2">
+                <div class="me-2" style="width: 20px; height: 20px; background-color: ${color}; border-radius: 3px;"></div>
+                <div class="flex-grow-1">
+                    <span class="fw-bold">${item.priority || '未知'}</span>
+                </div>
+                <span class="badge" style="background-color: ${color};">${item.count}</span>
+            </div>
+        `;
+    });
+    
+    chartHtml += '</div>';
+    container.innerHTML = chartHtml;
+}
+
+// 导出提交人员数据
+function exportSubmitterData() {
+    // TODO: 实现数据导出功能
+    showToast('导出功能开发中', 'info');
+}
+
+// 导出开发人员数据  
+function exportDeveloperData() {
+    // TODO: 实现数据导出功能
+    showToast('导出功能开发中', 'info');
 }

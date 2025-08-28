@@ -182,6 +182,225 @@ public class BugReportServiceImpl implements BugReportService {
         return result;
     }
 
+    @Override
+    public Map<String, Object> getSubmitterStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug提交人员统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getSubmitterStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug提交人员统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug提交人员统计获取成功，共 {} 个提交人", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug提交人员统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getDeveloperStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug负责开发人员统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getDeveloperStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug负责开发人员统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug负责开发人员统计获取成功，共 {} 个开发人员", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug负责开发人员统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getStatusStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug状态分布统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getStatusStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug状态分布统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug状态分布统计获取成功，共 {} 种状态", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug状态分布统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getSeverityStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug严重程度分布统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getSeverityStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug严重程度分布统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug严重程度分布统计获取成功，共 {} 种严重程度", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug严重程度分布统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getPriorityStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug优先级分布统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getPriorityStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug优先级分布统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug优先级分布统计获取成功，共 {} 种优先级", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug优先级分布统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getBugTrendStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取Bug趋势统计数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            List<Map<String, Object>> statistics = bugReportMapper.getBugTrendStatistics(startTime, endTime);
+            
+            result.put("success", true);
+            result.put("message", "获取Bug趋势统计成功");
+            result.put("data", statistics);
+            result.put("total", statistics.size());
+            
+            logger.info("Bug趋势统计获取成功，共 {} 个时间点", statistics.size());
+            
+        } catch (Exception e) {
+            logger.error("获取Bug趋势统计失败", e);
+            result.put("success", false);
+            result.put("message", "获取统计数据失败: " + e.getMessage());
+            result.put("data", new ArrayList<>());
+            result.put("total", 0);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getSummaryStatistics(String startTime, String endTime) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            logger.info("开始获取综合统计报表数据，时间范围: {} 到 {}", startTime, endTime);
+            
+            // 获取各项统计数据
+            Map<String, Object> submitterStats = getSubmitterStatistics(startTime, endTime);
+            Map<String, Object> developerStats = getDeveloperStatistics(startTime, endTime);
+            Map<String, Object> statusStats = getStatusStatistics(startTime, endTime);
+            Map<String, Object> severityStats = getSeverityStatistics(startTime, endTime);
+            Map<String, Object> priorityStats = getPriorityStatistics(startTime, endTime);
+            Map<String, Object> trendStats = getBugTrendStatistics(startTime, endTime);
+            
+            // 汇总数据
+            Map<String, Object> summaryData = new HashMap<>();
+            summaryData.put("submitterStatistics", submitterStats.get("data"));
+            summaryData.put("developerStatistics", developerStats.get("data"));
+            summaryData.put("statusStatistics", statusStats.get("data"));
+            summaryData.put("severityStatistics", severityStats.get("data"));
+            summaryData.put("priorityStatistics", priorityStats.get("data"));
+            summaryData.put("trendStatistics", trendStats.get("data"));
+            
+            // 计算总体统计信息
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> submitterData = (List<Map<String, Object>>) submitterStats.get("data");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> statusData = (List<Map<String, Object>>) statusStats.get("data");
+            
+            int totalBugs = 0;
+            if (statusData != null) {
+                for (Map<String, Object> item : statusData) {
+                    Object count = item.get("count");
+                    if (count instanceof Number) {
+                        totalBugs += ((Number) count).intValue();
+                    }
+                }
+            }
+            
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> developerData = (List<Map<String, Object>>) developerStats.get("data");
+            
+            Map<String, Object> overview = new HashMap<>();
+            overview.put("totalBugs", totalBugs);
+            overview.put("totalSubmitters", submitterData != null ? submitterData.size() : 0);
+            overview.put("totalDevelopers", developerData != null ? developerData.size() : 0);
+            
+            Map<String, Object> timeRange = new HashMap<>();
+            timeRange.put("startTime", startTime != null ? startTime : "不限");
+            timeRange.put("endTime", endTime != null ? endTime : "不限");
+            overview.put("timeRange", timeRange);
+            
+            summaryData.put("overview", overview);
+            
+            result.put("success", true);
+            result.put("message", "获取综合统计报表成功");
+            result.put("data", summaryData);
+            
+            logger.info("综合统计报表获取成功，总Bug数: {}", totalBugs);
+            
+        } catch (Exception e) {
+            logger.error("获取综合统计报表失败", e);
+            result.put("success", false);
+            result.put("message", "获取综合统计报表失败: " + e.getMessage());
+            result.put("data", new HashMap<>());
+        }
+        return result;
+    }
+
     /**
      * 执行curl命令并返回响应结果
      */
